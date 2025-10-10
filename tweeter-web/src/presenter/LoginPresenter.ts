@@ -49,11 +49,4 @@ export class LoginPresenter {
             this._view.setIsLoading(false);
         }
     }
-
-    public async login(
-        alias: string,
-        password: string
-    ): Promise<[User, AuthToken]> {
-        return this.service.login(alias, password);
-    }
 }

@@ -54,22 +54,4 @@ export class RegisterPresenter {
             this._view.setIsLoading(false);
         }
     }
-
-    public async register(
-        firstName: string,
-        lastName: string,
-        alias: string,
-        password: string,
-        userImageBytes: Uint8Array,
-        imageFileExtension: string
-    ): Promise<[User, AuthToken]> {
-        return this.service.register(
-            firstName,
-            lastName,
-            alias,
-            password,
-            userImageBytes,
-            imageFileExtension
-        );
-    }
 }
