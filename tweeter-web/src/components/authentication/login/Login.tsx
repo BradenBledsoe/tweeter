@@ -1,104 +1,92 @@
 import "./Login.css";
 import "bootstrap/dist/css/bootstrap.css";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthenticationFormLayout from "../AuthenticationFormLayout";
-import { AuthToken, FakeData, User } from "tweeter-shared";
 import AuthenticationFields from "../authenticationFields/AuthenticationFields";
 import { useMessageActions } from "../../toaster/MessageHooks";
 import { userInfoActions } from "../../userInfo/UserInfoHooks";
+import { LoginPresenter, LoginView } from "../../../presenter/LoginPresenter";
 
 interface Props {
-  originalUrl?: string;
+    originalUrl?: string;
+    presenterFactory: (listener: LoginView) => LoginPresenter;
 }
 
 const Login = (props: Props) => {
-  const [alias, setAlias] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+    const [alias, setAlias] = useState("");
+    const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-  const navigate = useNavigate();
-  const { updateUserInfo } = userInfoActions();
-  const { displayErrorMessage } = useMessageActions();
+    const navigate = useNavigate();
+    const { updateUserInfo } = userInfoActions();
+    const { displayErrorMessage } = useMessageActions();
 
-  const checkSubmitButtonStatus = (): boolean => {
-    return !alias || !password;
-  };
+    const listener: LoginView = {
+        displayErrorMessage: displayErrorMessage,
+        navigate: navigate,
+        setIsLoading: setIsLoading,
+        updateUserInfo: updateUserInfo,
+    };
 
-  const loginOnEnter = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (event.key == "Enter" && !checkSubmitButtonStatus()) {
-      doLogin();
-    }
-  };
-
-  const doLogin = async () => {
-    try {
-      setIsLoading(true);
-
-      const [user, authToken] = await login(alias, password);
-
-      updateUserInfo(user, user, authToken, rememberMe);
-
-      if (!!props.originalUrl) {
-        navigate(props.originalUrl);
-      } else {
-        navigate(`/feed/${user.alias}`);
-      }
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to log user in because of exception: ${error}`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (
-    alias: string,
-    password: string
-  ): Promise<[User, AuthToken]> => {
-    // TODO: Replace with the result of calling the server
-    const user = FakeData.instance.firstUser;
-
-    if (user === null) {
-      throw new Error("Invalid alias or password");
+    const presenterRef = useRef<LoginPresenter | null>(null);
+    if (!presenterRef.current) {
+        presenterRef.current = props.presenterFactory(listener);
     }
 
-    return [user, FakeData.instance.authToken];
-  };
+    const checkSubmitButtonStatus = (): boolean => {
+        return !alias || !password;
+    };
 
-  const inputFieldFactory = () => {
+    const loginOnEnter = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (event.key == "Enter" && !checkSubmitButtonStatus()) {
+            doLogin();
+        }
+    };
+
+    const doLogin = async () => {
+        presenterRef.current?.doLogin(
+            alias,
+            password,
+            props.originalUrl,
+            rememberMe
+        );
+    };
+
+    const inputFieldFactory = () => {
+        return (
+            <AuthenticationFields
+                onEnter={loginOnEnter}
+                onAliasChange={setAlias}
+                onPasswordChange={setPassword}
+            />
+        );
+    };
+
+    const switchAuthenticationMethodFactory = () => {
+        return (
+            <div className="mb-3">
+                Not registered? <Link to="/register">Register</Link>
+            </div>
+        );
+    };
+
     return (
-      <AuthenticationFields
-        onEnter={loginOnEnter}
-        onAliasChange={setAlias}
-        onPasswordChange={setPassword}
-      />
+        <AuthenticationFormLayout
+            headingText="Please Sign In"
+            submitButtonLabel="Sign in"
+            oAuthHeading="Sign in with:"
+            inputFieldFactory={inputFieldFactory}
+            switchAuthenticationMethodFactory={
+                switchAuthenticationMethodFactory
+            }
+            setRememberMe={setRememberMe}
+            submitButtonDisabled={checkSubmitButtonStatus}
+            isLoading={isLoading}
+            submit={doLogin}
+        />
     );
-  };
-
-  const switchAuthenticationMethodFactory = () => {
-    return (
-      <div className="mb-3">
-        Not registered? <Link to="/register">Register</Link>
-      </div>
-    );
-  };
-
-  return (
-    <AuthenticationFormLayout
-      headingText="Please Sign In"
-      submitButtonLabel="Sign in"
-      oAuthHeading="Sign in with:"
-      inputFieldFactory={inputFieldFactory}
-      switchAuthenticationMethodFactory={switchAuthenticationMethodFactory}
-      setRememberMe={setRememberMe}
-      submitButtonDisabled={checkSubmitButtonStatus}
-      isLoading={isLoading}
-      submit={doLogin}
-    />
-  );
 };
 
 export default Login;

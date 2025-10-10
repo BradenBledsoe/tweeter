@@ -1,4 +1,4 @@
-import { AuthToken, FakeData, Status } from "tweeter-shared";
+import { AuthToken, FakeData, Status, User } from "tweeter-shared";
 
 export class StatusService {
     public async loadMoreStoryItems(
@@ -29,5 +29,14 @@ export class StatusService {
         await new Promise((f) => setTimeout(f, 2000));
 
         // TODO: Call the server to post the status
+    }
+
+    public async getIsFollowerStatus(
+        authToken: AuthToken,
+        user: User,
+        selectedUser: User
+    ): Promise<boolean> {
+        // TODO: Replace with the result of calling server
+        return FakeData.instance.isFollower();
     }
 }
