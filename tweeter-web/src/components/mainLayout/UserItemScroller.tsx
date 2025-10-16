@@ -5,14 +5,12 @@ import { useParams } from "react-router-dom";
 import UserItem from "../userItem/UserItem";
 import { useMessageActions } from "../toaster/MessageHooks";
 import { userInfoActions, userInfoList } from "../userInfo/UserInfoHooks";
-import {
-    UserItemPresenter,
-    UserItemView,
-} from "../../presenter/UserItemPresenter";
+import { UserItemPresenter } from "../../presenter/UserItemPresenter";
+import { PagedItemView } from "../../presenter/PagedItemPresenter";
 
 interface Props {
     featureURL: string;
-    presenterFactory: (listener: UserItemView) => UserItemPresenter;
+    presenterFactory: (listener: PagedItemView<User>) => UserItemPresenter;
 }
 
 const UserItemScroller = (props: Props) => {
@@ -23,7 +21,7 @@ const UserItemScroller = (props: Props) => {
     const { setDisplayedUser } = userInfoActions();
     const { displayedUser: displayedUserAliasParam } = useParams();
 
-    const listener: UserItemView = {
+    const listener: PagedItemView<User> = {
         addItems: (newItems: User[]) =>
             setItems((previousItems) => [...previousItems, ...newItems]),
         displayErrorMessage: displayErrorMessage,

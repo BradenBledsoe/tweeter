@@ -1,6 +1,7 @@
 import { AuthToken, Status, User } from "tweeter-shared";
 import { UserService } from "../model.service/UserService";
 import { NavigateFunction } from "react-router-dom";
+import { Presenter } from "./Presenter";
 
 export interface UserNavigationHookView {
     displayErrorMessage: (message: string) => void;
@@ -8,14 +9,8 @@ export interface UserNavigationHookView {
     navigate: NavigateFunction;
 }
 
-export class UserNavigationHookPresenter {
-    private service: UserService;
-    private _view: UserNavigationHookView;
-
-    public constructor(view: UserNavigationHookView) {
-        this._view = view;
-        this.service = new UserService();
-    }
+export class UserNavigationHookPresenter extends Presenter<UserNavigationHookView> {
+    private service = new UserService();
 
     private extractAlias = (value: string): string => {
         const index = value.indexOf("@");
@@ -30,28 +25,17 @@ export class UserNavigationHookPresenter {
     ): Promise<void> {
         event.preventDefault();
 
-        try {
+        await this.doFailureReportingOperation(async () => {
             const alias = this.extractAlias(event.target.toString());
 
             const toUser = await this.service.getUser(authToken, alias);
 
             if (toUser) {
                 if (!toUser.equals(displayedUser)) {
-                    this._view.setDisplayedUser(toUser);
-                    this._view.navigate(`${featurePath}/${toUser.alias}`);
+                    this.view.setDisplayedUser(toUser);
+                    this.view.navigate(`${featurePath}/${toUser.alias}`);
                 }
             }
-        } catch (error) {
-            this._view.displayErrorMessage(
-                `Failed to get user because of exception: ${error}`
-            );
-        }
-    }
-
-    public async getUser(
-        authToken: AuthToken,
-        alias: string
-    ): Promise<User | null> {
-        return this.service.getUser(authToken, alias);
+        }, "get user");
     }
 }

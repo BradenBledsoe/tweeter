@@ -14,14 +14,15 @@ import UserItemScroller from "./components/mainLayout/UserItemScroller";
 import StatusItemScroller from "./components/mainLayout/StatusItemScroller";
 import { userInfoList } from "./components/userInfo/UserInfoHooks";
 import { FolloweePresenter } from "./presenter/FolloweePresenter";
-import { UserItemView } from "./presenter/UserItemPresenter";
 import { FollowerPresenter } from "./presenter/FollowerPresenter";
-import { StatusItemView } from "./presenter/StatusItemPresenter";
 import { StoryPresenter } from "./presenter/StoryPresenter";
 import { FeedPresenter } from "./presenter/FeedPresenter";
-import { LoginPresenter, LoginView } from "./presenter/LoginPresenter";
+import { LoginPresenter } from "./presenter/LoginPresenter";
 import { RegisterPresenter, RegisterView } from "./presenter/RegisterPresenter";
 import { ToasterPresenter, ToasterView } from "./presenter/ToasterPresenter";
+import { PagedItemView } from "./presenter/PagedItemPresenter";
+import { Status, User } from "tweeter-shared";
+import { AuthenticationView } from "./presenter/AuthenticationPresenter";
 
 const App = () => {
     const { currentUser, authToken } = userInfoList();
@@ -65,7 +66,7 @@ const AuthenticatedRoutes = () => {
                         <StatusItemScroller
                             key={`story-${displayedUser!.alias}`}
                             featureURL="/feed"
-                            presenterFactory={(view: StatusItemView) =>
+                            presenterFactory={(view: PagedItemView<Status>) =>
                                 new FeedPresenter(view)
                             }
                         />
@@ -77,7 +78,7 @@ const AuthenticatedRoutes = () => {
                         <StatusItemScroller
                             key={`story-${displayedUser!.alias}`}
                             featureURL="/story"
-                            presenterFactory={(view: StatusItemView) =>
+                            presenterFactory={(view: PagedItemView<Status>) =>
                                 new StoryPresenter(view)
                             }
                         />
@@ -89,7 +90,7 @@ const AuthenticatedRoutes = () => {
                         <UserItemScroller
                             key={`followees-${displayedUser!.alias}`}
                             featureURL="/followees"
-                            presenterFactory={(view: UserItemView) =>
+                            presenterFactory={(view: PagedItemView<User>) =>
                                 new FolloweePresenter(view)
                             }
                         />
@@ -101,7 +102,7 @@ const AuthenticatedRoutes = () => {
                         <UserItemScroller
                             key={`followers-${displayedUser!.alias}`}
                             featureURL="/followers"
-                            presenterFactory={(view: UserItemView) =>
+                            presenterFactory={(view: PagedItemView<User>) =>
                                 new FollowerPresenter(view)
                             }
                         />
@@ -126,7 +127,7 @@ const UnauthenticatedRoutes = () => {
                 path="/login"
                 element={
                     <Login
-                        presenterFactory={(view: LoginView) =>
+                        presenterFactory={(view: AuthenticationView) =>
                             new LoginPresenter(view)
                         }
                     />
@@ -147,7 +148,7 @@ const UnauthenticatedRoutes = () => {
                 element={
                     <Login
                         originalUrl={location.pathname}
-                        presenterFactory={(view: LoginView) =>
+                        presenterFactory={(view: AuthenticationView) =>
                             new LoginPresenter(view)
                         }
                     />

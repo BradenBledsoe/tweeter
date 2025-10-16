@@ -1,52 +1,36 @@
+import {
+    AuthenticationPresenter,
+    AuthenticationView,
+} from "./AuthenticationPresenter";
 import { AuthToken, User } from "tweeter-shared";
-import { UserService } from "../model.service/UserService";
-import { NavigateFunction } from "react-router-dom";
 
-export interface LoginView {
-    displayErrorMessage: (message: string) => void;
-    navigate: NavigateFunction;
-    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-    updateUserInfo: (
-        currentUser: User,
-        displayedUser: User | null,
-        authToken: AuthToken,
-        remember: boolean
-    ) => void;
-}
-
-export class LoginPresenter {
-    private service: UserService;
-    private _view: LoginView;
-
-    public constructor(view: LoginView) {
-        this._view = view;
-        this.service = new UserService();
-    }
-
+export class LoginPresenter extends AuthenticationPresenter<AuthenticationView> {
     public async doLogin(
         alias: string,
         password: string,
         originalUrl: string | undefined,
         rememberMe: boolean
     ) {
-        try {
-            this._view.setIsLoading(true);
+        await this.doAuthenticationOperation(
+            alias,
+            password,
+            rememberMe,
+            originalUrl
+        );
+    }
 
-            const [user, authToken] = await this.service.login(alias, password);
+    protected getPostAuthRedirectUrl(user: User, originalUrl?: string): string {
+        return originalUrl ? originalUrl : `/feed/${user.alias}`;
+    }
 
-            this._view.updateUserInfo(user, user, authToken, rememberMe);
+    protected itemDescription(): string {
+        return "log user in";
+    }
 
-            if (!!originalUrl) {
-                this._view.navigate(originalUrl);
-            } else {
-                this._view.navigate(`/feed/${user.alias}`);
-            }
-        } catch (error) {
-            this._view.displayErrorMessage(
-                `Failed to log user in because of exception: ${error}`
-            );
-        } finally {
-            this._view.setIsLoading(false);
-        }
+    protected authenticateUser(
+        alias: string,
+        password: string
+    ): Promise<[User, AuthToken]> {
+        return this.service.login(alias, password);
     }
 }
