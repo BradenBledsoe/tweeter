@@ -1,10 +1,9 @@
-import { AuthToken, Status, User } from "tweeter-shared";
+import { AuthToken, User } from "tweeter-shared";
 import { UserService } from "../model.service/UserService";
 import { NavigateFunction } from "react-router-dom";
-import { Presenter } from "./Presenter";
+import { Presenter, View } from "./Presenter";
 
-export interface UserNavigationHookView {
-    displayErrorMessage: (message: string) => void;
+export interface UserNavigationHookView extends View {
     setDisplayedUser: (user: User) => void;
     navigate: NavigateFunction;
 }

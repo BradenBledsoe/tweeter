@@ -18,6 +18,7 @@ export abstract class AuthenticationPresenter<
     V extends AuthenticationView
 > extends Presenter<V> {
     protected service = new UserService();
+
     public async doAuthenticationOperation(
         alias: string,
         password: string,
