@@ -3,13 +3,17 @@ import { UserService } from "../model.service/UserService";
 import { NavigateFunction } from "react-router-dom";
 import { MessageView, Presenter } from "./Presenter";
 
-export interface LogoutView extends MessageView {
+export interface AppNavbarView extends MessageView {
     navigate: NavigateFunction;
     clearUserInfo: () => void;
 }
 
-export class LogoutPresenter extends Presenter<LogoutView> {
-    private service = new UserService();
+export class AppNavbarPresenter extends Presenter<AppNavbarView> {
+    private _service = new UserService();
+
+    public get service() {
+        return this._service;
+    }
 
     public async logOut(authToken: AuthToken) {
         const loggingOutToastId = this.view.displayInfoMessage(

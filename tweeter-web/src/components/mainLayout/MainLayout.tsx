@@ -4,10 +4,6 @@ import AppNavbar from "../appNavbar/AppNavbar";
 import PostStatus from "../postStatus/PostStatus";
 import UserInfo from "../userInfo/UserInfoComponent";
 import {
-    PostStatusPresenter,
-    PostStatusView,
-} from "../../presenter/PostStatusPresenter";
-import {
     UserInfoPresenter,
     UserInfoView,
 } from "../../presenter/UserInfoPresenter";
@@ -28,11 +24,7 @@ const MainLayout = () => {
                                 />
                             </div>
                             <div className="p-3 border mt-1 rounded bg-light">
-                                <PostStatus
-                                    presenterFactory={(view: PostStatusView) =>
-                                        new PostStatusPresenter(view)
-                                    }
-                                />
+                                <PostStatus />
                             </div>
                         </div>
                     </div>

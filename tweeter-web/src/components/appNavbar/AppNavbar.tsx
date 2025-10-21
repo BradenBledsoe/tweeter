@@ -4,7 +4,10 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Image from "react-bootstrap/Image";
 import { useMessageActions } from "../toaster/MessageHooks";
 import { userInfoActions, userInfoList } from "../userInfo/UserInfoHooks";
-import { LogoutView, LogoutPresenter } from "../../presenter/LogoutPresenter";
+import {
+    AppNavbarPresenter,
+    AppNavbarView,
+} from "../../presenter/AppNavbarPresenter";
 
 const AppNavbar = () => {
     const location = useLocation();
@@ -14,7 +17,7 @@ const AppNavbar = () => {
     const { displayInfoMessage, displayErrorMessage, deleteMessage } =
         useMessageActions();
 
-    const listener: LogoutView = {
+    const listener: AppNavbarView = {
         displayErrorMessage: displayErrorMessage,
         navigate: navigate,
         displayInfoMessage: displayInfoMessage,
@@ -22,7 +25,7 @@ const AppNavbar = () => {
         clearUserInfo: clearUserInfo,
     };
 
-    const presenter = new LogoutPresenter(listener);
+    const presenter = new AppNavbarPresenter(listener);
 
     const logOut = async () => {
         presenter.logOut(authToken!);
