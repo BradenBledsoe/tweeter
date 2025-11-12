@@ -12,6 +12,11 @@ import {
     TweeterResponse,
     IsFollowerStatusRequest,
     IsFollowerStatusResponse,
+    GetUserResponse,
+    LoginRequest,
+    AuthToken,
+    AuthorizationResponse,
+    RegisterRequest,
 } from "tweeter-shared";
 import { ClientCommunicator } from "./ClientCommunicator";
 
@@ -219,5 +224,65 @@ export class ServerFacade {
         }
 
         return response.isFollower;
+    }
+
+    public async getUser(request: TweeterRequest): Promise<User | null> {
+        const response = await this.clientCommunicator.doPost<
+            TweeterRequest,
+            GetUserResponse
+        >(request, "/user/get");
+
+        if (!response.success) {
+            throw new Error(response.message ?? undefined);
+        }
+
+        const user = User.fromDto(response.user);
+
+        return user;
+    }
+
+    public async login(request: LoginRequest): Promise<[User, AuthToken]> {
+        const response = await this.clientCommunicator.doPost<
+            LoginRequest,
+            AuthorizationResponse
+        >(request, "/user/login");
+
+        if (!response.success) {
+            throw new Error(response.message ?? undefined);
+        }
+
+        const user = User.fromDto(response.user);
+        const authToken = AuthToken.fromDto(response.authToken);
+
+        return [user!, authToken!];
+    }
+
+    public async register(
+        request: RegisterRequest
+    ): Promise<[User, AuthToken]> {
+        const response = await this.clientCommunicator.doPost<
+            RegisterRequest,
+            AuthorizationResponse
+        >(request, "/user/register");
+
+        if (!response.success) {
+            throw new Error(response.message ?? undefined);
+        }
+
+        const user = User.fromDto(response.user);
+        const authToken = AuthToken.fromDto(response.authToken);
+
+        return [user!, authToken!];
+    }
+
+    public async logout(request: TweeterRequest): Promise<void> {
+        const response = await this.clientCommunicator.doPost<
+            TweeterRequest,
+            TweeterResponse
+        >(request, "/user/logout");
+
+        if (!response.success) {
+            throw new Error(response.message ?? undefined);
+        }
     }
 }

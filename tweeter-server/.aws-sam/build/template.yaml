@@ -688,6 +688,246 @@ Resources:
                   headers:
                     Access-Control-Allow-Origin:
                       type: string
+          /user/get:
+            post:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              x-amazon-apigateway-integration:
+                type: aws
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getUserFunction.Arn}/invocations
+                requestTemplates:
+                  application/json: $input.json('$')
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                  .*bad-request.*:
+                    statusCode: 400
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*unauthorized.*:
+                    statusCode: 401
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*internal-server-error.*:
+                    statusCode: 500
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+              responses:
+                '200':
+                  description: OK
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '400':
+                  description: Bad Request
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '401':
+                  description: Unauthorized
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '500':
+                  description: Internal Server Error
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+          /user/login:
+            post:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              x-amazon-apigateway-integration:
+                type: aws
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${loginFunction.Arn}/invocations
+                requestTemplates:
+                  application/json: $input.json('$')
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                  .*bad-request.*:
+                    statusCode: 400
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*unauthorized.*:
+                    statusCode: 401
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*internal-server-error.*:
+                    statusCode: 500
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+              responses:
+                '200':
+                  description: OK
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '400':
+                  description: Bad Request
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '401':
+                  description: Unauthorized
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '500':
+                  description: Internal Server Error
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+          /user/register:
+            post:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              x-amazon-apigateway-integration:
+                type: aws
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${registerFunction.Arn}/invocations
+                requestTemplates:
+                  application/json: $input.json('$')
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                  .*bad-request.*:
+                    statusCode: 400
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*unauthorized.*:
+                    statusCode: 401
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*internal-server-error.*:
+                    statusCode: 500
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+              responses:
+                '200':
+                  description: OK
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '400':
+                  description: Bad Request
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '401':
+                  description: Unauthorized
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '500':
+                  description: Internal Server Error
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+          /user/logout:
+            post:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              x-amazon-apigateway-integration:
+                type: aws
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${logoutFunction.Arn}/invocations
+                requestTemplates:
+                  application/json: $input.json('$')
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                  .*bad-request.*:
+                    statusCode: 400
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*unauthorized.*:
+                    statusCode: 401
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+                  .*internal-server-error.*:
+                    statusCode: 500
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{ "error": "$input.path(''$.errorMessage'')"
+                        }'
+              responses:
+                '200':
+                  description: OK
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '400':
+                  description: Bad Request
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '401':
+                  description: Unauthorized
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '500':
+                  description: Internal Server Error
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
   tweeterLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -927,6 +1167,98 @@ Resources:
       CodeUri: getIsFollowerStatusFunction
     Metadata:
       SamResourceId: getIsFollowerStatusFunction
+  getUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getUserFunction
+      Handler: user/GetUserLambda.handler
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonSESFullAccess
+      - CloudWatchFullAccess
+      - AmazonDynamoDBFullAccess
+      - AmazonS3FullAccess
+      - AmazonSQSFullAccess
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: tweeterApi
+            Path: /user/get
+            Method: POST
+      CodeUri: getUserFunction
+    Metadata:
+      SamResourceId: getUserFunction
+  loginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: loginFunction
+      Handler: user/LoginLambda.handler
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonSESFullAccess
+      - CloudWatchFullAccess
+      - AmazonDynamoDBFullAccess
+      - AmazonS3FullAccess
+      - AmazonSQSFullAccess
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: tweeterApi
+            Path: /user/login
+            Method: POST
+      CodeUri: loginFunction
+    Metadata:
+      SamResourceId: loginFunction
+  registerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: registerFunction
+      Handler: user/RegisterLambda.handler
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonSESFullAccess
+      - CloudWatchFullAccess
+      - AmazonDynamoDBFullAccess
+      - AmazonS3FullAccess
+      - AmazonSQSFullAccess
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: tweeterApi
+            Path: /user/register
+            Method: POST
+      CodeUri: registerFunction
+    Metadata:
+      SamResourceId: registerFunction
+  logoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: logoutFunction
+      Handler: user/LogoutLambda.handler
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonSESFullAccess
+      - CloudWatchFullAccess
+      - AmazonDynamoDBFullAccess
+      - AmazonS3FullAccess
+      - AmazonSQSFullAccess
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: tweeterApi
+            Path: /user/logout
+            Method: POST
+      CodeUri: logoutFunction
+    Metadata:
+      SamResourceId: logoutFunction
   followTable:
     Type: AWS::DynamoDB::Table
     Properties:
