@@ -14,12 +14,16 @@ export { AuthToken } from "./model/domain/AuthToken";
 // DTOs
 //
 export type { UserDto } from "./model/dto/UserDto";
+export type { StatusDto } from "./model/dto/StatusDto";
 
 //
 // Requests
 //
 export type { PagedUserItemRequest } from "./model/net/request/PagedUserItemRequest";
 export type { TweeterRequest } from "./model/net/request/TweeterRequest";
+export type { PagedStatusItemRequest } from "./model/net/request/PagedStatusItemRequest";
+export type { PostStatusRequest } from "./model/net/request/PostStatusRequest";
+export type { IsFollowerStatusRequest } from "./model/net/request/IsFollowerStatusRequest";
 
 //
 // Responses
@@ -28,6 +32,8 @@ export type { PagedUserItemResponse } from "./model/net/response/PagedUserItemRe
 export type { TweeterResponse } from "./model/net/response/TweeterResponse";
 export type { UserItemCountResponse } from "./model/net/response/UserItemCountResponse";
 export type { CombinedCountResponse } from "./model/net/response/CombinedCountResponse";
+export type { PagedStatusItemResponse } from "./model/net/response/PagedStatusItemResponse";
+export type { IsFollowerStatusResponse } from "./model/net/response/IsFollowerStatusResponse";
 
 //
 //Other

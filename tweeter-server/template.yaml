@@ -184,6 +184,62 @@ Resources:
                                 responses: *commonAmazonResponses
                             responses: *commonSwaggerResponses
 
+                    /story/list:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getStoryItemsFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
+                    /feed/list:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getFeedItemsFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
+                    /status/post:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${postStatusFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
+                    /status/isFollower:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getIsFollowerStatusFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
     #
     # SQS Queues
     #
@@ -301,6 +357,66 @@ Resources:
                     Properties:
                         RestApiId: !Ref tweeterApi
                         Path: /unfollow
+                        Method: POST
+
+    getStoryItemsFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: getStoryItemsFunction
+            ##### Modify Handler property to match your code.
+            Handler: status/GetStoryItemsLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /story/list
+                        Method: POST
+
+    getFeedItemsFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: getFeedItemsFunction
+            ##### Modify Handler property to match your code.
+            Handler: status/GetFeedItemsLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /feed/list
+                        Method: POST
+
+    postStatusFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: postStatusFunction
+            ##### Modify Handler property to match your code.
+            Handler: status/PostStatusLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /status/post
+                        Method: POST
+
+    getIsFollowerStatusFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: getIsFollowerStatusFunction
+            ##### Modify Handler property to match your code.
+            Handler: status/GetIsFollowerStatusLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /status/isFollower
                         Method: POST
 
     #

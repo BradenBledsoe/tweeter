@@ -43,11 +43,11 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
                 this.view.setIsFollower(false);
             } else {
                 this.view.setIsFollower(
-                    await this.statusService.getIsFollowerStatus(
-                        authToken!,
-                        currentUser!,
-                        displayedUser!
-                    )
+                    await this.statusService.getIsFollowerStatus({
+                        token: authToken!.token,
+                        user: currentUser!,
+                        selectedUser: displayedUser!,
+                    })
                 );
             }
         }, "determine follower status");

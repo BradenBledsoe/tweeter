@@ -6,8 +6,8 @@ export const handler = async (
 ): Promise<CombinedCountResponse> => {
     const followService = new FollowService();
     const [followerCount, followeeCount] = await followService.unfollow(
-        request.token,
-        request.userAlias
+        request.token!,
+        request.userAlias!
     );
 
     return {
