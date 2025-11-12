@@ -1,4 +1,4 @@
-import { AuthToken, User } from "tweeter-shared";
+import { AuthToken, TweeterRequest, User } from "tweeter-shared";
 import { NavigateFunction } from "react-router-dom";
 import { StatusService } from "../model.service/StatusService";
 import { FollowService } from "../model.service/FollowService";
@@ -56,12 +56,15 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
     private async updateFollowCount(
         authToken: AuthToken,
         displayedUser: User,
-        getFollowCount: (auth: AuthToken, user: User) => Promise<number>,
+        getFollowCount: (request: TweeterRequest) => Promise<number>,
         setFollowCount: (count: number) => void,
         description: string
     ) {
         await this.doFailureReportingOperation(async () => {
-            const count = await getFollowCount(authToken, displayedUser);
+            const count = await getFollowCount({
+                token: authToken.token,
+                userAlias: displayedUser.alias,
+            });
             setFollowCount(count);
         }, description);
     }
@@ -106,10 +109,10 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
                     0
                 );
 
-                const [followerCount, followeeCount] = await serviceMethod(
-                    authToken,
-                    user
-                );
+                const [followerCount, followeeCount] = await serviceMethod({
+                    token: authToken.token,
+                    userAlias: user.alias,
+                });
 
                 this.view.setIsFollower(isFollowing);
                 this.view.setFollowerCount(followerCount);

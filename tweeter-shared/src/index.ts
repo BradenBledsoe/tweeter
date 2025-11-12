@@ -26,6 +26,8 @@ export type { TweeterRequest } from "./model/net/request/TweeterRequest";
 //
 export type { PagedUserItemResponse } from "./model/net/response/PagedUserItemResponse";
 export type { TweeterResponse } from "./model/net/response/TweeterResponse";
+export type { UserItemCountResponse } from "./model/net/response/UserItemCountResponse";
+export type { CombinedCountResponse } from "./model/net/response/CombinedCountResponse";
 
 //
 //Other

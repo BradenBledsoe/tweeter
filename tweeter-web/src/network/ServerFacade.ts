@@ -1,8 +1,10 @@
 import {
+    CombinedCountResponse,
     PagedUserItemRequest,
     PagedUserItemResponse,
     User,
-    UserDto,
+    TweeterRequest,
+    UserItemCountResponse,
 } from "tweeter-shared";
 import { ClientCommunicator } from "./ClientCommunicator";
 
@@ -37,5 +39,98 @@ export class ServerFacade {
             console.error(response);
             throw new Error(response.message ?? undefined);
         }
+    }
+
+    public async getMoreFollowers(
+        request: PagedUserItemRequest
+    ): Promise<[User[], boolean]> {
+        const response = await this.clientCommunicator.doPost<
+            PagedUserItemRequest,
+            PagedUserItemResponse
+        >(request, "/follower/list");
+
+        // Convert the UserDto array returned by ClientCommunicator to a User array
+        const items: User[] | null =
+            response.success && response.items
+                ? response.items.map((dto) => User.fromDto(dto) as User)
+                : null;
+
+        // Handle errors
+        if (response.success) {
+            if (items == null) {
+                throw new Error(`No followers found`);
+            } else {
+                return [items, response.hasMore];
+            }
+        } else {
+            console.error(response);
+            throw new Error(response.message ?? undefined);
+        }
+    }
+
+    public async getFolloweeCount(request: TweeterRequest): Promise<number> {
+        const response = await this.clientCommunicator.doPost<
+            TweeterRequest,
+            UserItemCountResponse
+        >(request, `/followee/count`);
+
+        // Handle errors
+        if (response.success) {
+            if (response.count == null) {
+                throw new Error(`No followees found`);
+            } else {
+                return response.count;
+            }
+        } else {
+            console.error(response);
+            throw new Error(response.message ?? undefined);
+        }
+    }
+
+    public async getFollowerCount(request: TweeterRequest): Promise<number> {
+        const response = await this.clientCommunicator.doPost<
+            TweeterRequest,
+            UserItemCountResponse
+        >(request, `/follower/count`);
+
+        // Handle errors
+        if (response.success) {
+            if (response.count == null) {
+                throw new Error(`No followers found`);
+            } else {
+                return response.count;
+            }
+        } else {
+            console.error(response);
+            throw new Error(response.message ?? undefined);
+        }
+    }
+
+    public async follow(request: TweeterRequest): Promise<[number, number]> {
+        // Call the backend follow Lambda
+        const response = await this.clientCommunicator.doPost<
+            TweeterRequest,
+            CombinedCountResponse
+        >(request, "/follow");
+
+        if (!response.success) {
+            throw new Error(response.message ?? "Follow failed");
+        }
+
+        // Return updated counts
+        return [response.followerCount, response.followeeCount];
+    }
+
+    public async unfollow(request: TweeterRequest): Promise<[number, number]> {
+        const response = await this.clientCommunicator.doPost<
+            TweeterRequest,
+            CombinedCountResponse
+        >(request, "/unfollow");
+
+        if (!response.success) {
+            throw new Error(response.message ?? "Unfollow failed");
+        }
+
+        return [response.followerCount, response.followeeCount];
     }
 }

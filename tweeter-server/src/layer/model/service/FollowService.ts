@@ -1,8 +1,7 @@
 import { AuthToken, FakeData, User, UserDto } from "tweeter-shared";
-import { Service } from "./Service";
 
-export class FollowService implements Service {
-    private async getFakeData(
+export class FollowService {
+    private async getFakeDataUsers(
         lastItem: UserDto | null,
         pageSize: number,
         userAlias: string
@@ -23,7 +22,7 @@ export class FollowService implements Service {
         lastItem: UserDto | null
     ): Promise<[UserDto[], boolean]> {
         // TODO: Replace with the result of calling server
-        return this.getFakeData(lastItem, pageSize, userAlias);
+        return this.getFakeDataUsers(lastItem, pageSize, userAlias);
     }
 
     public async loadMoreFollowees(
@@ -33,62 +32,62 @@ export class FollowService implements Service {
         lastItem: UserDto | null
     ): Promise<[UserDto[], boolean]> {
         // TODO: Replace with the result of calling server
-        return this.getFakeData(lastItem, pageSize, userAlias);
+        return this.getFakeDataUsers(lastItem, pageSize, userAlias);
     }
 
     public async getFolloweeCount(
-        authToken: AuthToken,
-        user: User
+        token: string,
+        alias: string
     ): Promise<number> {
         // TODO: Replace with the result of calling server
-        return FakeData.instance.getFolloweeCount(user.alias);
+        return FakeData.instance.getFolloweeCount(alias);
     }
 
     public async getFollowerCount(
-        authToken: AuthToken,
-        user: User
+        token: string,
+        alias: string
     ): Promise<number> {
         // TODO: Replace with the result of calling server
-        return FakeData.instance.getFollowerCount(user.alias);
+        return FakeData.instance.getFollowerCount(alias);
     }
 
     public async follow(
-        authToken: AuthToken,
-        userToFollow: User
+        authToken: string,
+        userToFollowAlias: string
     ): Promise<[followerCount: number, followeeCount: number]> {
         // Pause so we can see the follow message. Remove when connected to the server
-        await new Promise((f) => setTimeout(f, 2000));
+        //await new Promise((f) => setTimeout(f, 2000));
 
         // TODO: Call the server
 
         const followerCount = await this.getFollowerCount(
             authToken,
-            userToFollow
+            userToFollowAlias
         );
         const followeeCount = await this.getFolloweeCount(
             authToken,
-            userToFollow
+            userToFollowAlias
         );
 
         return [followerCount, followeeCount];
     }
 
     public async unfollow(
-        authToken: AuthToken,
-        userToUnfollow: User
+        authToken: string,
+        userToUnfollowAlias: string
     ): Promise<[followerCount: number, followeeCount: number]> {
         // Pause so we can see the unfollow message. Remove when connected to the server
-        await new Promise((f) => setTimeout(f, 2000));
+        //await new Promise((f) => setTimeout(f, 2000));
 
         // TODO: Call the server
 
         const followerCount = await this.getFollowerCount(
             authToken,
-            userToUnfollow
+            userToUnfollowAlias
         );
         const followeeCount = await this.getFolloweeCount(
             authToken,
-            userToUnfollow
+            userToUnfollowAlias
         );
 
         return [followerCount, followeeCount];

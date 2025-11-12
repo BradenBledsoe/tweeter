@@ -110,7 +110,7 @@ Resources:
                                 requestTemplates: *commonRequestTemplates
                                 responses: *commonAmazonResponses
                             responses: *commonSwaggerResponses
-                    /user/create:
+                    /follower/list:
                         post:
                             consumes: *commonConsumes
                             produces: *commonProduces
@@ -119,7 +119,7 @@ Resources:
                                 httpMethod: POST
                                 uri:
                                     ##### Change "userCreateFunction" to the actual function name.
-                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userCreateFunction.Arn}/invocations
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getFollowersFunction.Arn}/invocations
                                 requestTemplates: *commonRequestTemplates
                                 responses: *commonAmazonResponses
                             responses: *commonSwaggerResponses
@@ -127,6 +127,62 @@ Resources:
                         #
                         # ADD MORE ENDPOINT DEFINITIONS HERE
                         #
+
+                    /followee/count:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getFolloweesCountFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
+                    /follower/count:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getFollowersCountFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
+                    /follow:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${followFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
+
+                    /unfollow:
+                        post:
+                            consumes: *commonConsumes
+                            produces: *commonProduces
+                            x-amazon-apigateway-integration:
+                                type: aws
+                                httpMethod: POST
+                                uri:
+                                    ##### Change "userCreateFunction" to the actual function name.
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${unfollowFunction.Arn}/invocations
+                                requestTemplates: *commonRequestTemplates
+                                responses: *commonAmazonResponses
+                            responses: *commonSwaggerResponses
 
     #
     # SQS Queues
@@ -168,24 +224,84 @@ Resources:
                         Path: /followee/list
                         Method: POST
 
-    userCreateFunction:
+    getFollowersFunction:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: userCreateFunction
+            FunctionName: getFollowersFunction
             ##### Modify Handler property to match your code.
-            Handler: handlers/users/UserCreateHandler.userCreateHandler
+            Handler: follow/GetFollowersLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
                     Type: Api
                     Properties:
                         RestApiId: !Ref tweeterApi
-                        Path: /user/create
+                        Path: /follower/list
                         Method: POST
 
     #
     # ADD MORE WEB API LAMBDA DEFINITIONS HERE
     #
+
+    getFolloweesCountFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: getFolloweesCountFunction
+            ##### Modify Handler property to match your code.
+            Handler: follow/GetFolloweesCountLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /followee/count
+                        Method: POST
+
+    getFollowersCountFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: getFollowersCountFunction
+            ##### Modify Handler property to match your code.
+            Handler: follow/GetFollowersCountLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /follower/count
+                        Method: POST
+
+    followFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: followFunction
+            ##### Modify Handler property to match your code.
+            Handler: follow/FollowLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /follow
+                        Method: POST
+
+    unfollowFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: unfollowFunction
+            ##### Modify Handler property to match your code.
+            Handler: follow/UnfollowLambda.handler
+            Policies: *commonPolicies
+            Events:
+                PostApi:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref tweeterApi
+                        Path: /unfollow
+                        Method: POST
 
     #
     # SQS Queue Lambda Functions
