@@ -60,13 +60,13 @@ describe("AppNavbarPresenter", () => {
             authToken,
             anything()
         );
-        verify(mockService.postStatus(authToken, anything())).once();
+        verify(mockService.postStatus(anything())).once();
 
-        let [capturedAuthToken, capturedStatus] = capture(
-            mockService.postStatus
-        ).last();
-        expect(capturedAuthToken).toEqual(authToken);
-        expect(capturedStatus.post).toEqual(postContent);
+        const captured = capture(mockService.postStatus).last() as unknown[];
+        const capturedArg = captured[0] as { token: string; newStatus: Status };
+
+        expect(capturedArg.newStatus.post).toEqual(postContent);
+        expect(capturedArg.token).toEqual(authToken.token);
     });
 
     it("tells the view to clear the info message that was displayed previously, clear the post, and display a status posted message when successful", async () => {
@@ -94,7 +94,7 @@ describe("AppNavbarPresenter", () => {
 
     it("tells the view to clear the info message and display an error message but does not tell it to clear the post or display a status posted message when unsuccessful", async () => {
         let error = new Error("An error occurred");
-        when(mockService.postStatus(authToken, anything())).thenThrow(error);
+        when(mockService.postStatus(anything())).thenThrow(error);
 
         await postStatusPresenter.submitPost(
             postContent,
