@@ -5,7 +5,8 @@ const tweeter_shared_1 = require("tweeter-shared");
 class UserService {
     async getUser(token, alias) {
         // TODO: Replace with the result of calling server
-        return tweeter_shared_1.FakeData.instance.findUserByAlias(alias);
+        const user = tweeter_shared_1.FakeData.instance.findUserByAlias(alias);
+        return user.dto;
     }
     async login(alias, password) {
         // TODO: Replace with the result of calling the server
