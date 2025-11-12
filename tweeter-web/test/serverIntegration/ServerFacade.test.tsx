@@ -15,10 +15,8 @@ describe("ServerFacade Integration Tests", () => {
     beforeEach(async () => {
         serverFacade = new ServerFacade();
 
-        // Create a unique alias for each run (to avoid duplicate errors)
         const alias = `@jestUser${Date.now()}`;
 
-        // Try register
         const [registeredUser, token] = await serverFacade.register({
             userAlias: "@jestUser",
             firstName: "Jest",
@@ -46,7 +44,7 @@ describe("ServerFacade Integration Tests", () => {
             token: authToken.token,
             userAlias: user.alias,
             pageSize: 10,
-            lastItem: null, // no last item
+            lastItem: null,
         };
 
         const [followers, hasMore] = await serverFacade.getMoreFollowers(
