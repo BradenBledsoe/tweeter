@@ -284,7 +284,7 @@ export class Status {
     public get dto(): StatusDto {
         return {
             post: this.post,
-            user: this.user,
+            user: this.user.dto,
             timestamp: this.timestamp,
         };
     }
