@@ -1,17 +1,12 @@
 import { FakeData, Status, StatusDto, UserDto } from "tweeter-shared";
+import { AuthorizationService } from "../../auth/AuthorizationService";
+import { DAOFactory } from "../../../daos/DAOFactory";
 
 export class StatusService {
-    private async getFakeDataStatuses(
-        lastItem: StatusDto | null,
-        pageSize: number
-    ): Promise<[StatusDto[], boolean]> {
-        const [items, hasMore] = FakeData.instance.getPageOfStatuses(
-            Status.fromDto(lastItem),
-            pageSize
-        );
-        const dtos = items.map((status) => status.dto);
-        return [dtos, hasMore];
-    }
+    constructor(
+        private factory: DAOFactory,
+        private auth: AuthorizationService
+    ) {}
 
     public async loadMoreStoryItems(
         token: string,
@@ -19,8 +14,9 @@ export class StatusService {
         pageSize: number,
         lastItem: StatusDto | null
     ): Promise<[StatusDto[], boolean]> {
-        // TODO: Replace with the result of calling server
-        return this.getFakeDataStatuses(lastItem, pageSize);
+        await this.auth.requireAuthorized(token);
+        const lastKey = lastItem ? String(lastItem.timestamp) : undefined;
+        return this.factory.statusDAO().listStory(userAlias, pageSize, lastKey);
     }
 
     public async loadMoreFeedItems(
@@ -29,17 +25,28 @@ export class StatusService {
         pageSize: number,
         lastItem: StatusDto | null
     ): Promise<[StatusDto[], boolean]> {
-        // TODO: Replace with the result of calling server
-        return this.getFakeDataStatuses(lastItem, pageSize);
+        await this.auth.requireAuthorized(token);
+        const lastKey = lastItem ? String(lastItem.timestamp) : undefined;
+        return this.factory.statusDAO().listFeed(userAlias, pageSize, lastKey);
     }
 
     public async postStatus(
         token: string,
         newStatus: StatusDto
     ): Promise<void> {
-        // Pause so we can see the logging out message. Remove when connected to the server
-        //await new Promise((f) => setTimeout(f, 2000));
-        // TODO: Call the server to post the status
+        const alias = await this.auth.requireAuthorized(token);
+        // Ensure timestamp is set
+        const status: StatusDto = {
+            post: newStatus.post,
+            user: newStatus.user, // full UserDto of the poster
+            timestamp: newStatus.timestamp ?? Date.now(),
+        };
+
+        // Write to the poster's story
+        await this.factory.statusDAO().putStatus(alias, status);
+
+        // Fan-out to followers' feeds
+        await this.factory.statusDAO().fanOutStatus(alias, status);
     }
 
     public async getIsFollowerStatus(
@@ -47,7 +54,10 @@ export class StatusService {
         user: UserDto,
         selectedUser: UserDto
     ): Promise<boolean> {
-        // TODO: Replace with the result of calling server
-        return FakeData.instance.isFollower();
+        const requesterAlias = await this.auth.requireAuthorized(token);
+        const followerAlias = user.alias ?? requesterAlias;
+        return this.factory
+            .followDAO()
+            .isFollower(followerAlias, selectedUser.alias);
     }
 }

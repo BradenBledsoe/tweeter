@@ -1,10 +1,12 @@
 import { CombinedCountResponse, TweeterRequest } from "tweeter-shared";
 import { FollowService } from "../model/service/FollowService";
+import { bootstrap } from "../ServiceBoostrap";
+
+const followService = new FollowService(bootstrap.factory, bootstrap.auth);
 
 export const handler = async (
     request: TweeterRequest
 ): Promise<CombinedCountResponse> => {
-    const followService = new FollowService();
     const [followerCount, followeeCount] = await followService.follow(
         request.token!,
         request.userAlias!

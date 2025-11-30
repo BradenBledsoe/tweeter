@@ -1,29 +1,39 @@
 import { AuthTokenDto, FakeData, UserDto } from "tweeter-shared";
+import { DAOFactory } from "../../../daos/DAOFactory";
+import { AuthorizationService } from "../../auth/AuthorizationService";
+import bcrypt from "bcryptjs/umd/types";
 
 export class UserService {
+    constructor(
+        private factory: DAOFactory,
+        private auth: AuthorizationService
+    ) {}
+
     public async getUser(
         token: string,
         alias: string
     ): Promise<UserDto | null> {
-        // TODO: Replace with the result of calling server
-        const user = FakeData.instance.findUserByAlias(alias);
-        return user!.dto;
+        await this.auth.requireAuthorized(token);
+        return this.factory.userDAO().getUser(alias);
     }
 
     public async login(
         alias: string,
         password: string
     ): Promise<[UserDto, AuthTokenDto]> {
-        // TODO: Replace with the result of calling the server
-        const user = FakeData.instance.firstUser;
+        const ok = await this.factory.userDAO().verifyPassword(alias, password);
+        if (!ok) throw new Error("UNAUTHORIZED: Invalid credentials");
 
-        if (user === null) {
-            throw new Error("Invalid alias or password");
-        }
+        const user = await this.factory.userDAO().getUser(alias);
+        if (!user) throw new Error("NOT_FOUND: User does not exist");
 
-        const authToken = FakeData.instance.authToken;
+        // Create token with timestamp
+        const token = crypto.randomUUID();
+        const timestamp = Date.now(); // ms since epoch
+        const authToken: AuthTokenDto = { token, timestamp };
 
-        return [user.dto, authToken.dto];
+        await this.factory.authTokenDAO().putToken(authToken);
+        return [user, authToken];
     }
 
     public async register(
@@ -34,20 +44,36 @@ export class UserService {
         userImageBytes: string,
         imageFileExtension: string
     ): Promise<[UserDto, AuthTokenDto]> {
-        // TODO: Replace with the result of calling the server
-        const user = FakeData.instance.firstUser;
+        const s3 = this.factory.s3DAO();
 
-        if (user === null) {
-            throw new Error("Invalid registration");
-        }
+        // Always upload the image, no fallback
+        const imageUrl = await s3.uploadProfileImage(
+            alias,
+            userImageBytes,
+            imageFileExtension
+        );
 
-        const authToken = FakeData.instance.authToken;
+        const passwordHash = await bcrypt.hash(password, 10);
 
-        return [user.dto, authToken.dto];
+        const user: UserDto = {
+            alias,
+            firstName,
+            lastName,
+            imageUrl, // guaranteed string
+        };
+
+        await this.factory.userDAO().createUser(user, passwordHash, imageUrl);
+
+        const token = crypto.randomUUID();
+        const timestamp = Date.now();
+        const authToken: AuthTokenDto = { token, timestamp };
+        await this.factory.authTokenDAO().putToken(authToken);
+
+        return [user, authToken];
     }
 
     public async logout(token: string): Promise<void> {
-        // Pause so we can see the logging out message. Delete when the call to the server is implemented.
-        //await new Promise((res) => setTimeout(res, 1000));
+        await this.auth.requireAuthorized(token);
+        await this.factory.authTokenDAO().deleteToken(token);
     }
 }

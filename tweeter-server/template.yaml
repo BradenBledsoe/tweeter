@@ -328,6 +328,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: follow/GetFolloweesLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -343,6 +353,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: follow/GetFollowersLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -362,6 +382,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: follow/GetFolloweesCountLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -377,6 +407,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: follow/GetFollowersCountLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -392,6 +432,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: follow/FollowLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -407,6 +457,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: follow/UnfollowLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -422,6 +482,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: status/GetStoryItemsLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -437,6 +507,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: status/GetFeedItemsLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -452,6 +532,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: status/PostStatusLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -467,6 +557,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: status/GetIsFollowerStatusLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -482,6 +582,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: user/GetUserLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -497,6 +607,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: user/LoginLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -512,6 +632,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: user/RegisterLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -527,6 +657,16 @@ Resources:
             ##### Modify Handler property to match your code.
             Handler: user/LogoutLambda.handler
             Policies: *commonPolicies
+            Environment:
+                Variables:
+                    USERS_TABLE: !Ref usersTable
+                    TOKENS_TABLE: !Ref authTokensTable
+                    FOLLOWERS_TABLE: !Ref followTable
+                    STORY_TABLE: !Ref storyTable
+                    FEED_TABLE: !Ref feedTable
+                    PROFILE_BUCKET: !Ref profileBucket
+                    FOLLOWEES_INDEX: follow_index
+                    AWS_REGION: !Ref AWS::Region
             Events:
                 PostApi:
                     Type: Api
@@ -583,3 +723,72 @@ Resources:
     #
     # ADD MORE TABLE DEFINITIONS HERE
     #
+
+    usersTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: users
+            BillingMode: PAY_PER_REQUEST
+            AttributeDefinitions:
+                - AttributeName: userAlias
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: userAlias
+                  KeyType: HASH
+
+    authTokensTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: authTokens
+            BillingMode: PAY_PER_REQUEST
+            AttributeDefinitions:
+                - AttributeName: token
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: token
+                  KeyType: HASH
+            TimeToLiveSpecification:
+                AttributeName: timestamp
+                Enabled: true
+
+    storyTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: story
+            BillingMode: PAY_PER_REQUEST
+            AttributeDefinitions:
+                - AttributeName: userAlias
+                  AttributeType: S
+                - AttributeName: timestamp
+                  AttributeType: N
+            KeySchema:
+                - AttributeName: userAlias
+                  KeyType: HASH
+                - AttributeName: timestamp
+                  KeyType: RANGE
+
+    feedTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: feed
+            BillingMode: PAY_PER_REQUEST
+            AttributeDefinitions:
+                - AttributeName: userAlias
+                  AttributeType: S
+                - AttributeName: timestamp
+                  AttributeType: N
+            KeySchema:
+                - AttributeName: userAlias
+                  KeyType: HASH
+                - AttributeName: timestamp
+                  KeyType: RANGE
+
+    profileBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: tweeter-profile-images # must be globally unique, no dots
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
