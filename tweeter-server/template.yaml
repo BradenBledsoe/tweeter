@@ -646,4 +646,4 @@ Resources:
     ProfileImagesBucket:
         Type: AWS::S3::Bucket
         Properties:
-            BucketName: !Sub tweeter-profile-images-${AWS::AccountId}-${AWS::Region}
+            BucketName: !Sub tweeter-profile-images-batfat00
