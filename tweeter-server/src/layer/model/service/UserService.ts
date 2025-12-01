@@ -1,8 +1,7 @@
 import { AuthTokenDto, FakeData, UserDto } from "tweeter-shared";
 import { DAOFactory } from "../../../daos/DAOFactory";
 import { AuthorizationService } from "../../auth/AuthorizationService";
-import bcrypt from "bcryptjs/umd/types";
-
+import * as bcrypt from "bcryptjs";
 export class UserService {
     constructor(
         private factory: DAOFactory,

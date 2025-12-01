@@ -1,19 +1,10 @@
-// daos/dynamo/DynamoUserDAO.ts
 import { UserDAO } from "../interfaces/UserDAO";
-import {
-    DynamoDBClient,
-    GetItemCommand,
-    PutItemCommand,
-    UpdateItemCommand,
-} from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { UserDto } from "tweeter-shared";
-import bcrypt from "bcryptjs";
 import {
     DynamoDBDocumentClient,
     GetCommand,
     PutCommand,
-    UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 export class DynamoUserDAO implements UserDAO {
@@ -36,7 +27,13 @@ export class DynamoUserDAO implements UserDAO {
     async createUser(user: UserDto, passwordHash: string): Promise<void> {
         const params = {
             TableName: this.tableName,
-            Item: { ...user, passwordHash },
+            Item: {
+                userAlias: user.alias,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                imageUrl: user.imageUrl,
+                passwordHash,
+            },
             ConditionExpression: "attribute_not_exists(alias)",
         };
         await this.client.send(new PutCommand(params));

@@ -18,7 +18,6 @@ export class S3ProfileDAO implements S3DAO {
                 Key: key,
                 Body: buffer,
                 ContentType: `image/${extension}`,
-                ACL: "public-read",
             })
         );
         return `https://${this.bucket}.s3.amazonaws.com/${key}`;

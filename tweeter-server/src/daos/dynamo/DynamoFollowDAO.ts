@@ -11,7 +11,7 @@ import { UserDto } from "tweeter-shared";
 import { FollowDAO } from "../interfaces/FollowDAO";
 
 export class DynamoFollowDAO implements FollowDAO {
-    readonly tableName = "follows";
+    readonly tableName = "tweeterFollows";
     readonly indexName = "followee_index";
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 

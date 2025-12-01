@@ -9,7 +9,7 @@ import {
 import { AuthTokenDto } from "tweeter-shared";
 
 export class DynamoAuthTokenDAO implements AuthTokenDAO {
-    readonly tableName = "tweeterAuth_tokens";
+    readonly tableName = "tweeterAuthTokens";
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
     async putToken(token: AuthTokenDto): Promise<void> {

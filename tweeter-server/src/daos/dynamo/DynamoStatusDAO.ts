@@ -1,13 +1,7 @@
-// daos/dynamo/DynamoStatusDAO.ts
 import { StatusDAO } from "../interfaces/StatusDAO";
-import {
-    DynamoDBClient,
-    PutItemCommand,
-    QueryCommand,
-    BatchWriteItemCommand,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { StatusDto } from "tweeter-shared";
 
 export class DynamoStatusDAO implements StatusDAO {

@@ -326,7 +326,7 @@ Resources:
         Properties:
             FunctionName: getFolloweesFunction
             ##### Modify Handler property to match your code.
-            Handler: follow/GetFolloweesLambda.handler
+            Handler: layer/follow/GetFolloweesLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -341,8 +341,8 @@ Resources:
         Properties:
             FunctionName: getFollowersFunction
             ##### Modify Handler property to match your code.
-            Handler: follow/GetFollowersLambda.handler
-            Policies: *commonPoliciesx
+            Handler: layer/follow/GetFollowersLambda.handler
+            Policies: *commonPolicies
             Events:
                 PostApi:
                     Type: Api
@@ -360,7 +360,7 @@ Resources:
         Properties:
             FunctionName: getFolloweesCountFunction
             ##### Modify Handler property to match your code.
-            Handler: follow/GetFolloweesCountLambda.handler
+            Handler: layer/follow/GetFolloweesCountLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -375,7 +375,7 @@ Resources:
         Properties:
             FunctionName: getFollowersCountFunction
             ##### Modify Handler property to match your code.
-            Handler: follow/GetFollowersCountLambda.handler
+            Handler: layer/follow/GetFollowersCountLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -390,7 +390,7 @@ Resources:
         Properties:
             FunctionName: followFunction
             ##### Modify Handler property to match your code.
-            Handler: follow/FollowLambda.handler
+            Handler: layer/follow/FollowLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -405,7 +405,7 @@ Resources:
         Properties:
             FunctionName: unfollowFunction
             ##### Modify Handler property to match your code.
-            Handler: follow/UnfollowLambda.handler
+            Handler: layer/follow/UnfollowLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -420,7 +420,7 @@ Resources:
         Properties:
             FunctionName: getStoryItemsFunction
             ##### Modify Handler property to match your code.
-            Handler: status/GetStoryItemsLambda.handler
+            Handler: layer/status/GetStoryItemsLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -435,7 +435,7 @@ Resources:
         Properties:
             FunctionName: getFeedItemsFunction
             ##### Modify Handler property to match your code.
-            Handler: status/GetFeedItemsLambda.handler
+            Handler: layer/status/GetFeedItemsLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -450,7 +450,7 @@ Resources:
         Properties:
             FunctionName: postStatusFunction
             ##### Modify Handler property to match your code.
-            Handler: status/PostStatusLambda.handler
+            Handler: layer/status/PostStatusLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -465,7 +465,7 @@ Resources:
         Properties:
             FunctionName: getIsFollowerStatusFunction
             ##### Modify Handler property to match your code.
-            Handler: status/GetIsFollowerStatusLambda.handler
+            Handler: layer/status/GetIsFollowerStatusLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -480,7 +480,7 @@ Resources:
         Properties:
             FunctionName: getUserFunction
             ##### Modify Handler property to match your code.
-            Handler: user/GetUserLambda.handler
+            Handler: layer/user/GetUserLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -495,7 +495,7 @@ Resources:
         Properties:
             FunctionName: loginFunction
             ##### Modify Handler property to match your code.
-            Handler: user/LoginLambda.handler
+            Handler: layer/user/LoginLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -510,7 +510,7 @@ Resources:
         Properties:
             FunctionName: registerFunction
             ##### Modify Handler property to match your code.
-            Handler: user/RegisterLambda.handler
+            Handler: layer/user/RegisterLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -525,17 +525,8 @@ Resources:
         Properties:
             FunctionName: logoutFunction
             ##### Modify Handler property to match your code.
-            Handler: user/LogoutLambda.handler
+            Handler: layer/user/LogoutLambda.handler
             Policies: *commonPolicies
-            Environment:
-                Variables:
-                    USERS_TABLE: !Ref usersTable
-                    TOKENS_TABLE: !Ref authTokensTable
-                    FOLLOWERS_TABLE: !Ref followTable
-                    STORY_TABLE: !Ref storyTable
-                    FEED_TABLE: !Ref feedTable
-                    PROFILE_BUCKET: !Ref profileBucket
-                    FOLLOWEES_INDEX: follow_index
             Events:
                 PostApi:
                     Type: Api
@@ -564,10 +555,10 @@ Resources:
     #
     # DynamoDB Tables
     #
-    followTable:
+    FollowsTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            TableName: follow
+            TableName: tweeterFollows
             AttributeDefinitions:
                 - AttributeName: follower_alias
                   AttributeType: S
@@ -593,10 +584,10 @@ Resources:
     # ADD MORE TABLE DEFINITIONS HERE
     #
 
-    usersTable:
+    UsersTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            TableName: users
+            TableName: tweeterUsers
             BillingMode: PAY_PER_REQUEST
             AttributeDefinitions:
                 - AttributeName: userAlias
@@ -605,10 +596,10 @@ Resources:
                 - AttributeName: userAlias
                   KeyType: HASH
 
-    authTokensTable:
+    AuthTokensTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            TableName: authTokens
+            TableName: tweeterAuthTokens
             BillingMode: PAY_PER_REQUEST
             AttributeDefinitions:
                 - AttributeName: token
@@ -620,10 +611,10 @@ Resources:
                 AttributeName: timestamp
                 Enabled: true
 
-    storyTable:
+    StoriesTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            TableName: story
+            TableName: tweeterStories
             BillingMode: PAY_PER_REQUEST
             AttributeDefinitions:
                 - AttributeName: userAlias
@@ -636,10 +627,10 @@ Resources:
                 - AttributeName: timestamp
                   KeyType: RANGE
 
-    feedTable:
+    FeedsTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            TableName: feed
+            TableName: tweeterFeeds
             BillingMode: PAY_PER_REQUEST
             AttributeDefinitions:
                 - AttributeName: userAlias
@@ -652,12 +643,7 @@ Resources:
                 - AttributeName: timestamp
                   KeyType: RANGE
 
-    profileBucket:
+    ProfileImagesBucket:
         Type: AWS::S3::Bucket
         Properties:
-            BucketName: tweeter-profile-images-batfat00 # must be globally unique, no dots
-            PublicAccessBlockConfiguration:
-                BlockPublicAcls: false
-                BlockPublicPolicy: false
-                IgnorePublicAcls: false
-                RestrictPublicBuckets: false
+            BucketName: !Sub tweeter-profile-images-${AWS::AccountId}-${AWS::Region}
