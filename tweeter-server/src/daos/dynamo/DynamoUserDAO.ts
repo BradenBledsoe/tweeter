@@ -9,62 +9,48 @@ import {
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { UserDto } from "tweeter-shared";
 import bcrypt from "bcryptjs";
+import {
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+    UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 export class DynamoUserDAO implements UserDAO {
-    constructor(private ddb: DynamoDBClient, private tableName: string) {}
+    readonly tableName = "tweeterUsers";
+    private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
+    // ---------- GET ----------
     async getUser(alias: string): Promise<UserDto | null> {
-        const res = await this.ddb.send(
-            new GetItemCommand({
-                TableName: this.tableName,
-                Key: marshall({ userAlias: alias }),
-            })
-        );
-        return res.Item ? (unmarshall(res.Item) as UserDto) : null;
+        const params = { TableName: this.tableName, Key: { alias } };
+        const output = await this.client.send(new GetCommand(params));
+        if (output.Item) {
+            console.log(`Retrieved user: ${alias}`);
+        } else {
+            console.log(`User not found: ${alias}`);
+        }
+        return output.Item ? (output.Item as UserDto) : null;
     }
 
-    async createUser(
-        user: UserDto,
-        passwordHash: string,
-        imageUrl?: string
-    ): Promise<void> {
-        await this.ddb.send(
-            new PutItemCommand({
-                TableName: this.tableName,
-                Item: marshall(
-                    {
-                        ...user,
-                        passwordHash,
-                        imageUrl,
-                    },
-                    { removeUndefinedValues: true }
-                ),
-                ConditionExpression: "attribute_not_exists(userAlias)",
-            })
-        );
+    // ---------- PUT ----------
+    async createUser(user: UserDto, passwordHash: string): Promise<void> {
+        const params = {
+            TableName: this.tableName,
+            Item: { ...user, passwordHash },
+            ConditionExpression: "attribute_not_exists(alias)",
+        };
+        await this.client.send(new PutCommand(params));
     }
 
-    async updateProfileImage(alias: string, imageUrl: string): Promise<void> {
-        await this.ddb.send(
-            new UpdateItemCommand({
+    // ---------- GET ----------
+    async getPasswordHash(alias: string): Promise<string | null> {
+        const res = await this.client.send(
+            new GetCommand({
                 TableName: this.tableName,
-                Key: marshall({ userAlias: alias }),
-                UpdateExpression: "SET imageUrl = :url",
-                ExpressionAttributeValues: marshall({ ":url": imageUrl }),
-            })
-        );
-    }
-
-    async verifyPassword(alias: string, password: string): Promise<boolean> {
-        const res = await this.ddb.send(
-            new GetItemCommand({
-                TableName: this.tableName,
-                Key: marshall({ userAlias: alias }),
+                Key: { alias },
                 ProjectionExpression: "passwordHash",
             })
         );
-        if (!res.Item) return false;
-        const hash = unmarshall(res.Item).passwordHash;
-        return bcrypt.compare(password, hash);
+        return res.Item?.passwordHash ?? null;
     }
 }

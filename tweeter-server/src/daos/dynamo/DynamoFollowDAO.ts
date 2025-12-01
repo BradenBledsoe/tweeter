@@ -1,123 +1,154 @@
-// daos/dynamo/DynamoFollowDAO.ts
-import { FollowDAO } from "../interfaces/FollowDAO";
 import {
-    DynamoDBClient,
-    PutItemCommand,
-    DeleteItemCommand,
+    DynamoDBDocumentClient,
+    PutCommand,
+    DeleteCommand,
     QueryCommand,
-    GetItemCommand,
-} from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+    QueryCommandInput,
+    GetCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { UserDto } from "tweeter-shared";
+import { FollowDAO } from "../interfaces/FollowDAO";
 
 export class DynamoFollowDAO implements FollowDAO {
-    constructor(
-        private ddb: DynamoDBClient,
-        private tableName: string,
-        private followeesIndexName: string
-    ) {}
+    readonly tableName = "follows";
+    readonly indexName = "followee_index";
+    private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
-    async follow(followerAlias: string, followeeAlias: string): Promise<void> {
-        await this.ddb.send(
-            new PutItemCommand({
-                TableName: this.tableName,
-                Item: marshall({ followeeAlias, followerAlias }),
-            })
-        );
+    // ---------- FOLLOW ----------
+    public async follow(follower: UserDto, followee: UserDto): Promise<void> {
+        const params = {
+            TableName: this.tableName,
+            Item: {
+                follower_handle: follower.alias,
+                followee_handle: followee.alias,
+                follower_name: `${follower.firstName} ${follower.lastName}`,
+                followee_name: `${followee.firstName} ${followee.lastName}`,
+            },
+            ConditionExpression:
+                "attribute_not_exists(follower_handle) AND attribute_not_exists(followee_handle)",
+        };
+        await this.client.send(new PutCommand(params));
     }
 
-    async unfollow(
+    // ---------- UNFOLLOW ----------
+    public async unfollow(
         followerAlias: string,
         followeeAlias: string
     ): Promise<void> {
-        await this.ddb.send(
-            new DeleteItemCommand({
-                TableName: this.tableName,
-                Key: marshall({ followeeAlias, followerAlias }),
-            })
-        );
+        const params = {
+            TableName: this.tableName,
+            Key: {
+                follower_handle: followerAlias,
+                followee_handle: followeeAlias,
+            },
+        };
+        await this.client.send(new DeleteCommand(params));
     }
 
-    async listFollowers(
+    // ---------- GET FOLLOWERS ----------
+    public async getFollowers(
         followeeAlias: string,
         pageSize: number,
-        lastKey?: string
+        lastFollowerAlias?: string
     ): Promise<[UserDto[], boolean]> {
-        const res = await this.ddb.send(
-            new QueryCommand({
-                TableName: this.tableName,
-                KeyConditionExpression: "followeeAlias = :f",
-                ExpressionAttributeValues: marshall({ ":f": followeeAlias }),
-                Limit: pageSize,
-                ...(lastKey
-                    ? { ExclusiveStartKey: marshall(JSON.parse(lastKey)) }
-                    : {}),
-            })
-        );
-        const items = (res.Items ?? []).map(
-            (i) => ({ alias: unmarshall(i).followerAlias } as UserDto)
-        );
-        return [items, !!res.LastEvaluatedKey];
+        const params: any = {
+            TableName: this.tableName,
+            IndexName: this.indexName,
+            KeyConditionExpression: "followee_handle = :f",
+            ExpressionAttributeValues: { ":f": followeeAlias },
+            Limit: pageSize,
+            ExclusiveStartKey: lastFollowerAlias
+                ? {
+                      followee_handle: followeeAlias,
+                      follower_handle: lastFollowerAlias,
+                  }
+                : undefined,
+        };
+
+        const data = await this.client.send(new QueryCommand(params));
+        const users =
+            data.Items?.map(
+                (item) =>
+                    ({
+                        alias: item.follower_handle,
+                        firstName: item.follower_name.split(" ")[0],
+                        lastName: item.follower_name.split(" ")[1],
+                        imageUrl: "", // optional if you store it
+                    } as UserDto)
+            ) ?? [];
+        return [users, data.LastEvaluatedKey !== undefined];
     }
 
-    async listFollowees(
+    // ---------- GET FOLLOWEES ----------
+    public async getFollowees(
         followerAlias: string,
         pageSize: number,
-        lastKey?: string
+        lastFolloweeAlias?: string
     ): Promise<[UserDto[], boolean]> {
-        const res = await this.ddb.send(
-            new QueryCommand({
-                TableName: this.tableName,
-                IndexName: this.followeesIndexName, // GSI on followerAlias
-                KeyConditionExpression: "followerAlias = :f",
-                ExpressionAttributeValues: marshall({ ":f": followerAlias }),
-                Limit: pageSize,
-                ...(lastKey
-                    ? { ExclusiveStartKey: marshall(JSON.parse(lastKey)) }
-                    : {}),
-            })
-        );
-        const items = (res.Items ?? []).map(
-            (i) => ({ alias: unmarshall(i).followeeAlias } as UserDto)
-        );
-        return [items, !!res.LastEvaluatedKey];
+        const params: any = {
+            TableName: this.tableName,
+            KeyConditionExpression: "follower_handle = :f",
+            ExpressionAttributeValues: { ":f": followerAlias },
+            Limit: pageSize,
+            ExclusiveStartKey: lastFolloweeAlias
+                ? {
+                      follower_handle: followerAlias,
+                      followee_handle: lastFolloweeAlias,
+                  }
+                : undefined,
+        };
+
+        const data = await this.client.send(new QueryCommand(params));
+        const users =
+            data.Items?.map(
+                (item) =>
+                    ({
+                        alias: item.followee_handle,
+                        firstName: item.followee_name.split(" ")[0],
+                        lastName: item.followee_name.split(" ")[1],
+                        imageUrl: "",
+                    } as UserDto)
+            ) ?? [];
+        return [users, data.LastEvaluatedKey !== undefined];
     }
 
-    async getFollowerCount(alias: string): Promise<number> {
-        const res = await this.ddb.send(
-            new QueryCommand({
-                TableName: this.tableName,
-                KeyConditionExpression: "followeeAlias = :f",
-                ExpressionAttributeValues: marshall({ ":f": alias }),
-                Select: "COUNT",
-            })
-        );
-        return res.Count ?? 0;
+    // ---------- COUNTS ----------
+    public async getFollowerCount(followeeAlias: string): Promise<number> {
+        const params: QueryCommandInput = {
+            TableName: this.tableName,
+            IndexName: this.indexName,
+            KeyConditionExpression: "followee_handle = :f",
+            ExpressionAttributeValues: { ":f": followeeAlias },
+            Select: "COUNT",
+        };
+        const data = await this.client.send(new QueryCommand(params));
+        return data.Count ?? 0;
     }
 
-    async getFolloweeCount(alias: string): Promise<number> {
-        const res = await this.ddb.send(
-            new QueryCommand({
-                TableName: this.tableName,
-                IndexName: this.followeesIndexName,
-                KeyConditionExpression: "followerAlias = :f",
-                ExpressionAttributeValues: marshall({ ":f": alias }),
-                Select: "COUNT",
-            })
-        );
-        return res.Count ?? 0;
+    public async getFolloweeCount(followerAlias: string): Promise<number> {
+        const params: QueryCommandInput = {
+            TableName: this.tableName,
+            KeyConditionExpression: "follower_handle = :f",
+            ExpressionAttributeValues: { ":f": followerAlias },
+            Select: "COUNT",
+        };
+        const data = await this.client.send(new QueryCommand(params));
+        return data.Count ?? 0;
     }
 
-    async isFollower(
+    public async getFollow(
         followerAlias: string,
         followeeAlias: string
     ): Promise<boolean> {
-        const res = await this.ddb.send(
-            new GetItemCommand({
-                TableName: this.tableName,
-                Key: marshall({ followeeAlias, followerAlias }),
-            })
-        );
+        const params = {
+            TableName: this.tableName,
+            Key: {
+                follower_handle: followerAlias,
+                followee_handle: followeeAlias,
+            },
+        };
+        const res = await this.client.send(new GetCommand(params));
         return !!res.Item;
     }
 }

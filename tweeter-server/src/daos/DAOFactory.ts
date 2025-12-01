@@ -4,11 +4,13 @@ import { FollowDAO } from "./interfaces/FollowDAO";
 import { StatusDAO } from "./interfaces/StatusDAO";
 import { AuthTokenDAO } from "./interfaces/AuthTokenDAO";
 import { S3DAO } from "./interfaces/S3DAO";
+import { FeedDAO } from "./interfaces/FeedDAO";
 
 export interface DAOFactory {
-    userDAO(): UserDAO;
-    followDAO(): FollowDAO;
-    statusDAO(): StatusDAO;
-    authTokenDAO(): AuthTokenDAO;
-    s3DAO(): S3DAO;
+    createUserDAO(): UserDAO;
+    createFollowDAO(): FollowDAO;
+    createStatusDAO(): StatusDAO;
+    createFeedDAO(): FeedDAO;
+    createAuthTokenDAO(): AuthTokenDAO;
+    createS3DAO(): S3DAO;
 }

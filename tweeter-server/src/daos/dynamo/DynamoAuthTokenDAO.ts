@@ -1,42 +1,30 @@
-// daos/dynamo/DynamoAuthTokenDAO.ts
 import { AuthTokenDAO } from "../interfaces/AuthTokenDAO";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
-    DynamoDBClient,
-    PutItemCommand,
-    GetItemCommand,
-    DeleteItemCommand,
-} from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+    DeleteCommand,
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { AuthTokenDto } from "tweeter-shared";
 
 export class DynamoAuthTokenDAO implements AuthTokenDAO {
-    constructor(private ddb: DynamoDBClient, private tableName: string) {}
+    readonly tableName = "tweeterAuth_tokens";
+    private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
     async putToken(token: AuthTokenDto): Promise<void> {
-        await this.ddb.send(
-            new PutItemCommand({
-                TableName: this.tableName,
-                Item: marshall(token),
-            })
-        );
+        const params = { TableName: this.tableName, Item: token };
+        await this.client.send(new PutCommand(params));
     }
 
     async getToken(token: string): Promise<AuthTokenDto | null> {
-        const res = await this.ddb.send(
-            new GetItemCommand({
-                TableName: this.tableName,
-                Key: marshall({ token }),
-            })
-        );
-        return res.Item ? (unmarshall(res.Item) as AuthTokenDto) : null;
+        const params = { TableName: this.tableName, Key: { token } };
+        const output = await this.client.send(new GetCommand(params));
+        return output.Item ? (output.Item as AuthTokenDto) : null;
     }
 
     async deleteToken(token: string): Promise<void> {
-        await this.ddb.send(
-            new DeleteItemCommand({
-                TableName: this.tableName,
-                Key: marshall({ token }),
-            })
-        );
+        const params = { TableName: this.tableName, Key: { token } };
+        await this.client.send(new DeleteCommand(params));
     }
 }

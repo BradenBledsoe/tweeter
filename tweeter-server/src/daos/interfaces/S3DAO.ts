@@ -1,7 +1,7 @@
 export interface S3DAO {
     uploadProfileImage(
         alias: string,
-        imageStringBase64Encoded: string,
-        fileExtension: string
+        base64: string,
+        extension: string
     ): Promise<string>;
 }

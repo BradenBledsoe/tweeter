@@ -15,8 +15,9 @@ export class StatusService {
         lastItem: StatusDto | null
     ): Promise<[StatusDto[], boolean]> {
         await this.auth.requireAuthorized(token);
-        const lastKey = lastItem ? String(lastItem.timestamp) : undefined;
-        return this.factory.statusDAO().listStory(userAlias, pageSize, lastKey);
+        return this.factory
+            .createStatusDAO()
+            .getPageOfStatuses(userAlias, pageSize, lastItem);
     }
 
     public async loadMoreFeedItems(
@@ -26,8 +27,9 @@ export class StatusService {
         lastItem: StatusDto | null
     ): Promise<[StatusDto[], boolean]> {
         await this.auth.requireAuthorized(token);
-        const lastKey = lastItem ? String(lastItem.timestamp) : undefined;
-        return this.factory.statusDAO().listFeed(userAlias, pageSize, lastKey);
+        return this.factory
+            .createFeedDAO()
+            .getPageOfFeedItems(userAlias, pageSize, lastItem);
     }
 
     public async postStatus(
@@ -35,18 +37,23 @@ export class StatusService {
         newStatus: StatusDto
     ): Promise<void> {
         const alias = await this.auth.requireAuthorized(token);
-        // Ensure timestamp is set
-        const status: StatusDto = {
-            post: newStatus.post,
-            user: newStatus.user, // full UserDto of the poster
-            timestamp: newStatus.timestamp ?? Date.now(),
-        };
 
-        // Write to the poster's story
-        await this.factory.statusDAO().putStatus(alias, status);
+        // 1. Put status in stories table
+        await this.factory.createStatusDAO().putStatus({
+            ...newStatus,
+            user: { ...newStatus.user, alias },
+        });
 
-        // Fan-out to followers' feeds
-        await this.factory.statusDAO().fanOutStatus(alias, status);
+        // 2. Fan-out to followers’ feeds
+        const followers = await this.factory
+            .createFollowDAO()
+            .getFollowers(alias, 100, undefined);
+        const [users] = followers;
+        for (const follower of users) {
+            await this.factory
+                .createFeedDAO()
+                .batchPutFeedItems(follower.alias, [newStatus]);
+        }
     }
 
     public async getIsFollowerStatus(
@@ -55,9 +62,9 @@ export class StatusService {
         selectedUser: UserDto
     ): Promise<boolean> {
         const requesterAlias = await this.auth.requireAuthorized(token);
-        const followerAlias = user.alias ?? requesterAlias;
-        return this.factory
-            .followDAO()
-            .isFollower(followerAlias, selectedUser.alias);
+        const follow = await this.factory
+            .createFollowDAO()
+            .getFollow(user.alias, selectedUser.alias);
+        return follow !== null;
     }
 }

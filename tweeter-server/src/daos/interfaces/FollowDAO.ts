@@ -1,19 +1,18 @@
 import { UserDto } from "tweeter-shared";
-
 export interface FollowDAO {
-    follow(followerAlias: string, followeeAlias: string): Promise<void>;
+    follow(follower: UserDto, followee: UserDto): Promise<void>;
     unfollow(followerAlias: string, followeeAlias: string): Promise<void>;
-    listFollowers(
+    getFollowers(
         followeeAlias: string,
         pageSize: number,
-        lastKey?: string
+        lastFollowerAlias?: string
     ): Promise<[UserDto[], boolean]>;
-    listFollowees(
+    getFollowees(
         followerAlias: string,
         pageSize: number,
-        lastKey?: string
+        lastFolloweeAlias?: string
     ): Promise<[UserDto[], boolean]>;
-    getFollowerCount(alias: string): Promise<number>;
-    getFolloweeCount(alias: string): Promise<number>;
-    isFollower(followerAlias: string, followeeAlias: string): Promise<boolean>;
+    getFollowerCount(followeeAlias: string): Promise<number>;
+    getFolloweeCount(followerAlias: string): Promise<number>;
+    getFollow(followerAlias: string, followeeAlias: string): Promise<boolean>;
 }

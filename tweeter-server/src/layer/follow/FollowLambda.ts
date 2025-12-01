@@ -1,12 +1,15 @@
 import { CombinedCountResponse, TweeterRequest } from "tweeter-shared";
 import { FollowService } from "../model/service/FollowService";
-import { bootstrap } from "../ServiceBoostrap";
-
-const followService = new FollowService(bootstrap.factory, bootstrap.auth);
+import { DynamoDAOFactory } from "../../daos/dynamo/DynamoDAOFactory";
+import { AuthorizationService } from "../auth/AuthorizationService";
 
 export const handler = async (
     request: TweeterRequest
 ): Promise<CombinedCountResponse> => {
+    const factory = new DynamoDAOFactory();
+    const auth = new AuthorizationService(factory.createAuthTokenDAO());
+    const followService = new FollowService(factory, auth);
+
     const [followerCount, followeeCount] = await followService.follow(
         request.token!,
         request.userAlias!

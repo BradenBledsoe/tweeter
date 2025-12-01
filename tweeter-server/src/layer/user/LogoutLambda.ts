@@ -1,12 +1,15 @@
 import { TweeterRequest, TweeterResponse } from "tweeter-shared";
 import { UserService } from "../model/service/UserService";
-import { bootstrap } from "../ServiceBoostrap";
-
-const userService = new UserService(bootstrap.factory, bootstrap.auth);
+import { DynamoDAOFactory } from "../../daos/dynamo/DynamoDAOFactory";
+import { AuthorizationService } from "../auth/AuthorizationService";
 
 export const handler = async (
     request: TweeterRequest
 ): Promise<TweeterResponse> => {
+    const factory = new DynamoDAOFactory();
+    const auth = new AuthorizationService(factory.createAuthTokenDAO());
+    const userService = new UserService(factory, auth);
+
     await userService.logout(request.token!);
 
     return {

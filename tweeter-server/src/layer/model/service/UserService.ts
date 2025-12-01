@@ -14,25 +14,27 @@ export class UserService {
         alias: string
     ): Promise<UserDto | null> {
         await this.auth.requireAuthorized(token);
-        return this.factory.userDAO().getUser(alias);
+        return this.factory.createUserDAO().getUser(alias);
     }
 
     public async login(
         alias: string,
         password: string
     ): Promise<[UserDto, AuthTokenDto]> {
-        const ok = await this.factory.userDAO().verifyPassword(alias, password);
-        if (!ok) throw new Error("UNAUTHORIZED: Invalid credentials");
+        // get stored hash
+        const hash = await this.factory.createUserDAO().getPasswordHash(alias);
+        if (!hash || !(await bcrypt.compare(password, hash))) {
+            throw new Error("UNAUTHORIZED: Invalid credentials");
+        }
 
-        const user = await this.factory.userDAO().getUser(alias);
+        const user = await this.factory.createUserDAO().getUser(alias);
         if (!user) throw new Error("NOT_FOUND: User does not exist");
 
-        // Create token with timestamp
         const token = crypto.randomUUID();
-        const timestamp = Date.now(); // ms since epoch
+        const timestamp = Date.now();
         const authToken: AuthTokenDto = { token, timestamp };
 
-        await this.factory.authTokenDAO().putToken(authToken);
+        await this.factory.createAuthTokenDAO().putToken(authToken);
         return [user, authToken];
     }
 
@@ -44,9 +46,9 @@ export class UserService {
         userImageBytes: string,
         imageFileExtension: string
     ): Promise<[UserDto, AuthTokenDto]> {
-        const s3 = this.factory.s3DAO();
+        const s3 = this.factory.createS3DAO();
 
-        // Always upload the image, no fallback
+        // upload profile image
         const imageUrl = await s3.uploadProfileImage(
             alias,
             userImageBytes,
@@ -59,21 +61,21 @@ export class UserService {
             alias,
             firstName,
             lastName,
-            imageUrl, // guaranteed string
+            imageUrl,
         };
 
-        await this.factory.userDAO().createUser(user, passwordHash, imageUrl);
+        await this.factory.createUserDAO().createUser(user, passwordHash);
 
         const token = crypto.randomUUID();
         const timestamp = Date.now();
         const authToken: AuthTokenDto = { token, timestamp };
-        await this.factory.authTokenDAO().putToken(authToken);
 
+        await this.factory.createAuthTokenDAO().putToken(authToken);
         return [user, authToken];
     }
 
     public async logout(token: string): Promise<void> {
         await this.auth.requireAuthorized(token);
-        await this.factory.authTokenDAO().deleteToken(token);
+        await this.factory.createAuthTokenDAO().deleteToken(token);
     }
 }

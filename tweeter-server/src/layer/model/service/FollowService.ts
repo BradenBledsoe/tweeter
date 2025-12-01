@@ -15,10 +15,9 @@ export class FollowService {
         lastItem: UserDto | null
     ): Promise<[UserDto[], boolean]> {
         await this.auth.requireAuthorized(token);
-        const lastKey = lastItem?.alias;
         return this.factory
-            .followDAO()
-            .listFollowers(userAlias, pageSize, lastKey);
+            .createFollowDAO()
+            .getFollowers(userAlias, pageSize, lastItem?.alias);
     }
 
     public async loadMoreFollowees(
@@ -28,10 +27,9 @@ export class FollowService {
         lastItem: UserDto | null
     ): Promise<[UserDto[], boolean]> {
         await this.auth.requireAuthorized(token);
-        const lastKey = lastItem?.alias;
         return this.factory
-            .followDAO()
-            .listFollowees(userAlias, pageSize, lastKey);
+            .createFollowDAO()
+            .getFollowees(userAlias, pageSize, lastItem?.alias);
     }
 
     public async getFolloweeCount(
@@ -39,7 +37,7 @@ export class FollowService {
         alias: string
     ): Promise<number> {
         await this.auth.requireAuthorized(token);
-        return this.factory.followDAO().getFolloweeCount(alias);
+        return this.factory.createFollowDAO().getFolloweeCount(alias);
     }
 
     public async getFollowerCount(
@@ -47,21 +45,31 @@ export class FollowService {
         alias: string
     ): Promise<number> {
         await this.auth.requireAuthorized(token);
-        return this.factory.followDAO().getFollowerCount(alias);
+        return this.factory.createFollowDAO().getFollowerCount(alias);
     }
 
     public async follow(
         token: string,
         userToFollowAlias: string
     ): Promise<[followerCount: number, followeeCount: number]> {
-        const followerAlias = await this.auth.requireAuthorized(token);
-        await this.factory.followDAO().follow(followerAlias, userToFollowAlias);
-        const followerCount = await this.factory
-            .followDAO()
-            .getFollowerCount(userToFollowAlias);
-        const followeeCount = await this.factory
-            .followDAO()
-            .getFolloweeCount(followerAlias);
+        const alias = await this.auth.requireAuthorized(token);
+
+        await this.factory.createFollowDAO().follow(
+            { alias, firstName: "", lastName: "", imageUrl: "" },
+            {
+                alias: userToFollowAlias,
+                firstName: "",
+                lastName: "",
+                imageUrl: "",
+            }
+        );
+
+        const followerCount = await this.getFollowerCount(
+            token,
+            userToFollowAlias
+        );
+        const followeeCount = await this.getFolloweeCount(token, alias);
+
         return [followerCount, followeeCount];
     }
 
@@ -69,16 +77,18 @@ export class FollowService {
         token: string,
         userToUnfollowAlias: string
     ): Promise<[followerCount: number, followeeCount: number]> {
-        const followerAlias = await this.auth.requireAuthorized(token);
+        const alias = await this.auth.requireAuthorized(token);
+
         await this.factory
-            .followDAO()
-            .unfollow(followerAlias, userToUnfollowAlias);
-        const followerCount = await this.factory
-            .followDAO()
-            .getFollowerCount(userToUnfollowAlias);
-        const followeeCount = await this.factory
-            .followDAO()
-            .getFolloweeCount(followerAlias);
+            .createFollowDAO()
+            .unfollow(alias, userToUnfollowAlias);
+
+        const followerCount = await this.getFollowerCount(
+            token,
+            userToUnfollowAlias
+        );
+        const followeeCount = await this.getFolloweeCount(token, alias);
+
         return [followerCount, followeeCount];
     }
 }

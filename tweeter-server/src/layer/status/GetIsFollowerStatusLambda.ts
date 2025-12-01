@@ -3,13 +3,16 @@ import {
     IsFollowerStatusResponse,
 } from "tweeter-shared";
 import { StatusService } from "../model/service/StatusService";
-import { bootstrap } from "../ServiceBoostrap";
-
-const statusService = new StatusService(bootstrap.factory, bootstrap.auth);
+import { DynamoDAOFactory } from "../../daos/dynamo/DynamoDAOFactory";
+import { AuthorizationService } from "../auth/AuthorizationService";
 
 export const handler = async (
     request: IsFollowerStatusRequest
 ): Promise<IsFollowerStatusResponse> => {
+    const factory = new DynamoDAOFactory();
+    const auth = new AuthorizationService(factory.createAuthTokenDAO());
+    const statusService = new StatusService(factory, auth);
+
     const isFollower = await statusService.getIsFollowerStatus(
         request.token!,
         request.user,
