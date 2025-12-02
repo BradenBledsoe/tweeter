@@ -10,15 +10,19 @@ export const handler = async (
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const followService = new FollowService(factory, auth);
 
-    const [followerCount, followeeCount] = await followService.follow(
-        request.token!,
-        request.userAlias!
-    );
+    try {
+        const [followerCount, followeeCount] = await followService.follow(
+            request.token!,
+            request.userAlias!
+        );
 
-    return {
-        success: true,
-        message: null,
-        followerCount: followerCount,
-        followeeCount: followeeCount,
-    };
+        return {
+            success: true,
+            message: null,
+            followerCount: followerCount,
+            followeeCount: followeeCount,
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };

@@ -10,10 +10,14 @@ export const handler = async (
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const statusService = new StatusService(factory, auth);
 
-    await statusService.postStatus(request.token!, request.newStatus);
+    try {
+        await statusService.postStatus(request.token!, request.newStatus);
 
-    return {
-        success: true,
-        message: "Status posted",
-    };
+        return {
+            success: true,
+            message: "Status posted",
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };

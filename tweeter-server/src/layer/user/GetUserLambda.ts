@@ -10,11 +10,18 @@ export const handler = async (
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const userService = new UserService(factory, auth);
 
-    const user = await userService.getUser(request.token!, request.userAlias!);
+    try {
+        const user = await userService.getUser(
+            request.token!,
+            request.userAlias!
+        );
 
-    return {
-        success: true,
-        message: null,
-        user: user,
-    };
+        return {
+            success: true,
+            message: null,
+            user: user,
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };

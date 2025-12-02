@@ -23,11 +23,11 @@ export class UserService {
         // get stored hash
         const hash = await this.factory.createUserDAO().getPasswordHash(alias);
         if (!hash || !(await bcrypt.compare(password, hash))) {
-            throw new Error("UNAUTHORIZED: Invalid credentials");
+            throw new Error("unauthorized: Invalid credentials");
         }
 
         const user = await this.factory.createUserDAO().getUser(alias);
-        if (!user) throw new Error("NOT_FOUND: User does not exist");
+        if (!user) throw new Error("bad-request: User does not exist");
 
         const token = crypto.randomUUID();
         const timestamp = Date.now();
@@ -74,6 +74,7 @@ export class UserService {
     }
 
     public async logout(token: string): Promise<void> {
+        console.log("Logging out token:", token);
         await this.auth.requireAuthorized(token);
         await this.factory.createAuthTokenDAO().deleteToken(token);
     }

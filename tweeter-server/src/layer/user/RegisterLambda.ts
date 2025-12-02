@@ -9,20 +9,23 @@ export const handler = async (
     const factory = new DynamoDAOFactory();
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const userService = new UserService(factory, auth);
+    try {
+        const [user, authToken] = await userService.register(
+            request.firstName,
+            request.lastName,
+            request.userAlias!,
+            request.password,
+            request.userImageBytes,
+            request.imageFileExtension
+        );
 
-    const [user, authToken] = await userService.register(
-        request.firstName,
-        request.lastName,
-        request.userAlias!,
-        request.password,
-        request.userImageBytes,
-        request.imageFileExtension
-    );
-
-    return {
-        success: true,
-        message: null,
-        user: user,
-        authToken: authToken,
-    };
+        return {
+            success: true,
+            message: null,
+            user: user,
+            authToken: authToken,
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };

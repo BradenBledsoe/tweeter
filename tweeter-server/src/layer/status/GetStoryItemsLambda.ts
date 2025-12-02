@@ -13,17 +13,21 @@ export const handler = async (
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const statusService = new StatusService(factory, auth);
 
-    const [items, hasMore] = await statusService.loadMoreStoryItems(
-        request.token!,
-        request.userAlias!,
-        request.pageSize,
-        request.lastItem
-    );
+    try {
+        const [items, hasMore] = await statusService.loadMoreStoryItems(
+            request.token!,
+            request.userAlias!,
+            request.pageSize,
+            request.lastItem
+        );
 
-    return {
-        success: true,
-        message: null,
-        items: items,
-        hasMore: hasMore,
-    };
+        return {
+            success: true,
+            message: null,
+            items: items,
+            hasMore: hasMore,
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };

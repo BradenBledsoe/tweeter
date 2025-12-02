@@ -13,15 +13,19 @@ export const handler = async (
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const statusService = new StatusService(factory, auth);
 
-    const isFollower = await statusService.getIsFollowerStatus(
-        request.token!,
-        request.user,
-        request.selectedUser
-    );
+    try {
+        const isFollower = await statusService.getIsFollowerStatus(
+            request.token!,
+            request.user,
+            request.selectedUser
+        );
 
-    return {
-        success: true,
-        message: null,
-        isFollower: isFollower,
-    };
+        return {
+            success: true,
+            message: null,
+            isFollower: isFollower,
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };

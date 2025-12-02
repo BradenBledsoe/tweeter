@@ -9,15 +9,20 @@ export const handler = async (
     const factory = new DynamoDAOFactory();
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const followService = new FollowService(factory, auth);
-    const [followerCount, followeeCount] = await followService.unfollow(
-        request.token!,
-        request.userAlias!
-    );
 
-    return {
-        success: true,
-        message: null,
-        followerCount: followerCount,
-        followeeCount: followeeCount,
-    };
+    try {
+        const [followerCount, followeeCount] = await followService.unfollow(
+            request.token!,
+            request.userAlias!
+        );
+
+        return {
+            success: true,
+            message: null,
+            followerCount: followerCount,
+            followeeCount: followeeCount,
+        };
+    } catch (error: any) {
+        throw new Error(`${error.message}`);
+    }
 };
