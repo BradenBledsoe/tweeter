@@ -1,7 +1,7 @@
-import { AuthTokenDto } from "tweeter-shared";
+import { AuthTokenRecord } from "../../layer/model/persistence/AuthTokenRecord";
 
 export interface AuthTokenDAO {
-    putToken(token: AuthTokenDto): Promise<void>;
-    getToken(token: string): Promise<AuthTokenDto | null>;
+    putToken(token: AuthTokenRecord): Promise<void>;
+    getToken(token: string): Promise<AuthTokenRecord | null>;
     deleteToken(token: string): Promise<void>;
 }

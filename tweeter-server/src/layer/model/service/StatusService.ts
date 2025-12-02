@@ -1,6 +1,7 @@
 import { FakeData, Status, StatusDto, UserDto } from "tweeter-shared";
 import { AuthorizationService } from "../../auth/AuthorizationService";
 import { DAOFactory } from "../../../daos/DAOFactory";
+import { StatusItem } from "../persistence/StatusItem";
 
 export class StatusService {
     constructor(
@@ -38,11 +39,14 @@ export class StatusService {
     ): Promise<void> {
         const alias = await this.auth.requireAuthorized(token);
 
-        // 1. Put status in stories table
-        await this.factory.createStatusDAO().putStatus({
+        const item: StatusItem = {
             ...newStatus,
-            user: { ...newStatus.user, alias },
-        });
+            userAlias: alias, // top-level partition key
+            user: { ...newStatus.user, alias }, // keep nested user object
+        };
+
+        // 1. Put status in stories table
+        await this.factory.createStatusDAO().putStatus(item);
 
         // 2. Fan-out to followers’ feeds
         const followers = await this.factory

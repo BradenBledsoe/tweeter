@@ -7,20 +7,21 @@ import {
     PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { AuthTokenDto } from "tweeter-shared";
+import { AuthTokenRecord } from "../../layer/model/persistence/AuthTokenRecord";
 
 export class DynamoAuthTokenDAO implements AuthTokenDAO {
     readonly tableName = "tweeterAuthTokens";
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
-    async putToken(token: AuthTokenDto): Promise<void> {
+    async putToken(token: AuthTokenRecord): Promise<void> {
         const params = { TableName: this.tableName, Item: token };
         await this.client.send(new PutCommand(params));
     }
 
-    async getToken(token: string): Promise<AuthTokenDto | null> {
+    async getToken(token: string): Promise<AuthTokenRecord | null> {
         const params = { TableName: this.tableName, Key: { token } };
         const output = await this.client.send(new GetCommand(params));
-        return output.Item ? (output.Item as AuthTokenDto) : null;
+        return output.Item ? (output.Item as AuthTokenRecord) : null;
     }
 
     async deleteToken(token: string): Promise<void> {

@@ -2,6 +2,7 @@ import { AuthTokenDto, FakeData, UserDto } from "tweeter-shared";
 import { DAOFactory } from "../../../daos/DAOFactory";
 import { AuthorizationService } from "../../auth/AuthorizationService";
 import * as bcrypt from "bcryptjs";
+import { AuthTokenRecord } from "../persistence/AuthTokenRecord";
 export class UserService {
     constructor(
         private factory: DAOFactory,
@@ -31,7 +32,11 @@ export class UserService {
 
         const token = crypto.randomUUID();
         const timestamp = Date.now();
-        const authToken: AuthTokenDto = { token, timestamp };
+        const authToken: AuthTokenRecord = {
+            token,
+            timestamp,
+            userAlias: alias,
+        };
 
         await this.factory.createAuthTokenDAO().putToken(authToken);
         return [user, authToken];
@@ -67,7 +72,11 @@ export class UserService {
 
         const token = crypto.randomUUID();
         const timestamp = Date.now();
-        const authToken: AuthTokenDto = { token, timestamp };
+        const authToken: AuthTokenRecord = {
+            token,
+            timestamp,
+            userAlias: alias,
+        };
 
         await this.factory.createAuthTokenDAO().putToken(authToken);
         return [user, authToken];

@@ -3,39 +3,43 @@ import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { StatusDto } from "tweeter-shared";
+import { StatusItem } from "../../layer/model/persistence/StatusItem";
 
 export class DynamoStatusDAO implements StatusDAO {
     readonly tableName = "tweeterStories";
-    readonly indexName = "author_index";
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
     // ---------- PUT ----------
-    public async putStatus(status: StatusDto): Promise<void> {
+    public async putStatus(status: StatusItem): Promise<void> {
         const params = {
             TableName: this.tableName,
             Item: status,
-            ConditionExpression: "attribute_not_exists(statusId)",
         };
         await this.client.send(new PutCommand(params));
     }
 
     // ---------- QUERY ----------
     public async getPageOfStatuses(
-        authorAlias: string,
+        userAlias: string,
         pageSize: number,
         lastItem: StatusDto | null
     ): Promise<[StatusDto[], boolean]> {
+        console.log("HIT Getting page of statuses for userAlias:", userAlias);
+        console.log("lastItem:", lastItem);
         const params: any = {
             TableName: this.tableName,
-            IndexName: this.indexName,
-            KeyConditionExpression: "authorAlias = :a",
-            ExpressionAttributeValues: { ":a": authorAlias },
+            KeyConditionExpression: "userAlias = :a",
+            ExpressionAttributeValues: { ":a": userAlias },
             Limit: pageSize,
             ScanIndexForward: false,
-            ExclusiveStartKey: lastItem
-                ? { authorAlias, timestamp: lastItem.timestamp }
-                : undefined,
         };
+        if (lastItem) {
+            params.ExclusiveStartKey = {
+                userAlias,
+                timestamp: Number(lastItem.timestamp),
+            };
+        }
+        console.log("Query params:", JSON.stringify(params, null, 2));
 
         const data = await this.client.send(new QueryCommand(params));
         const items =

@@ -15,6 +15,6 @@ export class AuthorizationService {
             throw new Error("unauthorized: Invalid or expired token");
         }
 
-        return record.token; // or record.userAlias if stored separately
+        return record.userAlias; // or record.userAlias if stored separately
     }
 }

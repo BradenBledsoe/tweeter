@@ -61,7 +61,7 @@ export class AuthToken {
     }
 
     public toJson(): string {
-        return JSON.stringify(this.dto);
+        return JSON.stringify(this);
     }
 
     public get dto(): AuthTokenDto {

@@ -2,6 +2,7 @@ import { TweeterRequest, TweeterResponse } from "tweeter-shared";
 import { UserService } from "../model/service/UserService";
 import { DynamoDAOFactory } from "../../daos/dynamo/DynamoDAOFactory";
 import { AuthorizationService } from "../auth/AuthorizationService";
+import { extractToken } from "../auth/TokenExtractor";
 
 export const handler = async (
     request: TweeterRequest
@@ -9,9 +10,11 @@ export const handler = async (
     const factory = new DynamoDAOFactory();
     const auth = new AuthorizationService(factory.createAuthTokenDAO());
     const userService = new UserService(factory, auth);
+    console.log("LogoutLambda invoked with request:", request);
 
     try {
-        await userService.logout(request.token!);
+        const token = extractToken(request);
+        await userService.logout(token);
 
         return {
             success: true,
