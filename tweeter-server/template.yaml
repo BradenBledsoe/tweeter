@@ -33,7 +33,6 @@ Metadata:
     x-common-swagger-response-headers: &commonSwaggerResponseHeaders
         Access-Control-Allow-Origin:
             type: string
-
 #
 # AWS resource definitions
 #
@@ -590,10 +589,10 @@ Resources:
             TableName: tweeterUsers
             BillingMode: PAY_PER_REQUEST
             AttributeDefinitions:
-                - AttributeName: userAlias
+                - AttributeName: alias
                   AttributeType: S
             KeySchema:
-                - AttributeName: userAlias
+                - AttributeName: alias
                   KeyType: HASH
 
     AuthTokensTable:

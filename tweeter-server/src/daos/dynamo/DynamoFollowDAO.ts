@@ -12,7 +12,7 @@ import { FollowDAO } from "../interfaces/FollowDAO";
 
 export class DynamoFollowDAO implements FollowDAO {
     readonly tableName = "tweeterFollows";
-    readonly indexName = "followee_index";
+    readonly indexName = "follow_index";
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
     // ---------- FOLLOW ----------
@@ -20,13 +20,13 @@ export class DynamoFollowDAO implements FollowDAO {
         const params = {
             TableName: this.tableName,
             Item: {
-                follower_handle: follower.alias,
-                followee_handle: followee.alias,
+                follower_alias: follower.alias,
+                followee_alias: followee.alias,
                 follower_name: `${follower.firstName} ${follower.lastName}`,
                 followee_name: `${followee.firstName} ${followee.lastName}`,
             },
             ConditionExpression:
-                "attribute_not_exists(follower_handle) AND attribute_not_exists(followee_handle)",
+                "attribute_not_exists(follower_alias) AND attribute_not_exists(followee_alias)",
         };
         await this.client.send(new PutCommand(params));
     }
@@ -39,8 +39,8 @@ export class DynamoFollowDAO implements FollowDAO {
         const params = {
             TableName: this.tableName,
             Key: {
-                follower_handle: followerAlias,
-                followee_handle: followeeAlias,
+                follower_alias: followerAlias,
+                followee_alias: followeeAlias,
             },
         };
         await this.client.send(new DeleteCommand(params));
@@ -55,13 +55,13 @@ export class DynamoFollowDAO implements FollowDAO {
         const params: any = {
             TableName: this.tableName,
             IndexName: this.indexName,
-            KeyConditionExpression: "followee_handle = :f",
+            KeyConditionExpression: "followee_alias = :f",
             ExpressionAttributeValues: { ":f": followeeAlias },
             Limit: pageSize,
             ExclusiveStartKey: lastFollowerAlias
                 ? {
-                      followee_handle: followeeAlias,
-                      follower_handle: lastFollowerAlias,
+                      followee_alias: followeeAlias,
+                      follower_alias: lastFollowerAlias,
                   }
                 : undefined,
         };
@@ -71,7 +71,7 @@ export class DynamoFollowDAO implements FollowDAO {
             data.Items?.map(
                 (item) =>
                     ({
-                        alias: item.follower_handle,
+                        alias: item.follower_alias,
                         firstName: item.follower_name.split(" ")[0],
                         lastName: item.follower_name.split(" ")[1],
                         imageUrl: "", // optional if you store it
@@ -88,13 +88,13 @@ export class DynamoFollowDAO implements FollowDAO {
     ): Promise<[UserDto[], boolean]> {
         const params: any = {
             TableName: this.tableName,
-            KeyConditionExpression: "follower_handle = :f",
+            KeyConditionExpression: "follower_alias = :f",
             ExpressionAttributeValues: { ":f": followerAlias },
             Limit: pageSize,
             ExclusiveStartKey: lastFolloweeAlias
                 ? {
-                      follower_handle: followerAlias,
-                      followee_handle: lastFolloweeAlias,
+                      follower_alias: followerAlias,
+                      followee_alias: lastFolloweeAlias,
                   }
                 : undefined,
         };
@@ -104,7 +104,7 @@ export class DynamoFollowDAO implements FollowDAO {
             data.Items?.map(
                 (item) =>
                     ({
-                        alias: item.followee_handle,
+                        alias: item.followee_alias,
                         firstName: item.followee_name.split(" ")[0],
                         lastName: item.followee_name.split(" ")[1],
                         imageUrl: "",
@@ -118,7 +118,7 @@ export class DynamoFollowDAO implements FollowDAO {
         const params: QueryCommandInput = {
             TableName: this.tableName,
             IndexName: this.indexName,
-            KeyConditionExpression: "followee_handle = :f",
+            KeyConditionExpression: "followee_alias = :f",
             ExpressionAttributeValues: { ":f": followeeAlias },
             Select: "COUNT",
         };
@@ -129,7 +129,7 @@ export class DynamoFollowDAO implements FollowDAO {
     public async getFolloweeCount(followerAlias: string): Promise<number> {
         const params: QueryCommandInput = {
             TableName: this.tableName,
-            KeyConditionExpression: "follower_handle = :f",
+            KeyConditionExpression: "follower_alias = :f",
             ExpressionAttributeValues: { ":f": followerAlias },
             Select: "COUNT",
         };
@@ -144,8 +144,8 @@ export class DynamoFollowDAO implements FollowDAO {
         const params = {
             TableName: this.tableName,
             Key: {
-                follower_handle: followerAlias,
-                followee_handle: followeeAlias,
+                follower_alias: followerAlias,
+                followee_alias: followeeAlias,
             },
         };
         const res = await this.client.send(new GetCommand(params));

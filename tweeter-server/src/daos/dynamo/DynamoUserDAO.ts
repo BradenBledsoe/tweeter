@@ -28,7 +28,7 @@ export class DynamoUserDAO implements UserDAO {
         const params = {
             TableName: this.tableName,
             Item: {
-                userAlias: user.alias,
+                alias: user.alias,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 imageUrl: user.imageUrl,
