@@ -1,4 +1,3 @@
 export interface TweeterRequest {
-    readonly token?: string;
-    readonly userAlias?: string;
+    // Base interface for all request types - allows ClientCommunicator to accept any request
 }

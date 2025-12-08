@@ -11,12 +11,11 @@ export class FollowerPresenter extends UserItemPresenter {
         authToken: AuthToken,
         userAlias: string
     ): Promise<[User[], boolean]> {
-        const request: PagedUserItemRequest = {
-            token: authToken.token,
-            userAlias: userAlias,
-            pageSize: PAGE_SIZE,
-            lastItem: this.lastItem?.dto ?? null,
-        };
-        return this.service.loadMoreFollowers(request);
+        return this.service.loadMoreFollowers(
+            authToken,
+            userAlias,
+            PAGE_SIZE,
+            this.lastItem
+        );
     }
 }

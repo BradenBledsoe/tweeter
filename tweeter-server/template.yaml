@@ -304,6 +304,18 @@ Resources:
     #     Properties:
     #       QueueName: MyQueue
 
+    PostUpdateQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: post-update-feed-queue
+            VisibilityTimeout: 40
+
+    UpdateFeedQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: update-feed-queue
+            VisibilityTimeout: 10
+
     #
     # Lambda Layer (reused by all Lambda functions)
     #
@@ -320,6 +332,55 @@ Resources:
     #
     # Web API Lambda functions
     #
+
+    # Lambda triggered by PostUpdateQueue: reads status message, fetches followers and enqueues chunks to UpdateFeedQueue
+    postUpdateFeedMessagesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: tweeterPostUpdateFeedMessages
+            Handler: lambda/status/PostUpdateFeedMessagesLambda.handler
+            Policies: *commonPolicies
+            Environment:
+                Variables:
+                    UPDATE_FEED_QUEUE_URL: !Ref UpdateFeedQueue
+            Timeout: 30
+            Events:
+                SQSTrigger:
+                    Type: SQS
+                    Properties:
+                        Queue: !GetAtt PostUpdateQueue.Arn
+                        Enabled: true
+
+    # Lambda triggered by UpdateFeedQueue: writes batches to feed table
+    updateFeedsFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: tweeterUpdateFeeds
+            Handler: lambda/status/UpdateFeedsLambda.handler
+            Policies: *commonPolicies
+            Timeout: 5
+            Events:
+                SQSTrigger:
+                    Type: SQS
+                    Properties:
+                        Queue: !GetAtt UpdateFeedQueue.Arn
+                        Enabled: true
+    #
+    # SQS Queue Lambda Functions
+    #
+
+    #   MyQueueFunction:
+    #     Type: AWS::Serverless::Function
+    #     Properties:
+    #       FunctionName: MyQueueFunction
+    #       Handler: <PATH TO LAMBDA HANDLER>
+    #       Policies: *commonPolicies
+    #       Events:
+    #         SQSTrigger:
+    #           Type: SQS
+    #           Properties:
+    #             Queue: !GetAtt MyQueue.Arn
+    #             Enabled: true
     getFolloweesFunction:
         Type: AWS::Serverless::Function
         Properties:
@@ -535,26 +596,10 @@ Resources:
                         Method: POST
 
     #
-    # SQS Queue Lambda Functions
-    #
-
-    #   MyQueueFunction:
-    #     Type: AWS::Serverless::Function
-    #     Properties:
-    #       FunctionName: MyQueueFunction
-    #       Handler: <PATH TO LAMBDA HANDLER>
-    #       Policies: *commonPolicies
-    #       Events:
-    #         SQSTrigger:
-    #           Type: SQS
-    #           Properties:
-    #             Queue: !GetAtt MyQueue.Arn
-    #             Enabled: true
-
-    #
     # DynamoDB Tables
     #
-    FollowsTable:
+    # Follow relationships table
+    followsTable:
         Type: AWS::DynamoDB::Table
         Properties:
             TableName: tweeterFollows
@@ -568,81 +613,118 @@ Resources:
                   KeyType: HASH
                 - AttributeName: followee_alias
                   KeyType: RANGE
-            BillingMode: PAY_PER_REQUEST
+            BillingMode: PROVISIONED
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
             GlobalSecondaryIndexes:
-                - IndexName: follow_index
+                - IndexName: followee-follower-index
                   KeySchema:
                       - AttributeName: followee_alias
                         KeyType: HASH
                       - AttributeName: follower_alias
                         KeyType: RANGE
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 5
+                      WriteCapacityUnits: 5
                   Projection:
                       ProjectionType: ALL
 
-    #
-    # ADD MORE TABLE DEFINITIONS HERE
-    #
-
-    UsersTable:
+    # Users table
+    usersTable:
         Type: AWS::DynamoDB::Table
         Properties:
             TableName: tweeterUsers
-            BillingMode: PAY_PER_REQUEST
             AttributeDefinitions:
                 - AttributeName: alias
                   AttributeType: S
             KeySchema:
                 - AttributeName: alias
                   KeyType: HASH
+            BillingMode: PROVISIONED
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
 
-    AuthTokensTable:
+    # Status posts table
+    statusesTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            TableName: tweeterAuthTokens
-            BillingMode: PAY_PER_REQUEST
+            TableName: tweeterStatuses
+            AttributeDefinitions:
+                - AttributeName: author_alias
+                  AttributeType: S
+                - AttributeName: timestamp
+                  AttributeType: N
+            KeySchema:
+                - AttributeName: author_alias
+                  KeyType: HASH
+                - AttributeName: timestamp
+                  KeyType: RANGE
+            BillingMode: PROVISIONED
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+
+    # User feeds table (pre-computed feeds)
+    feedTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: tweeterFeed
+            AttributeDefinitions:
+                - AttributeName: feed_owner_alias
+                  AttributeType: S
+                - AttributeName: timestamp
+                  AttributeType: N
+            KeySchema:
+                - AttributeName: feed_owner_alias
+                  KeyType: HASH
+                - AttributeName: timestamp
+                  KeyType: RANGE
+            BillingMode: PROVISIONED
+            ProvisionedThroughput:
+                ReadCapacityUnits: 10
+                WriteCapacityUnits: 100
+
+    # Authentication tokens table
+    authTokensTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: tweeterAuthtokens
             AttributeDefinitions:
                 - AttributeName: token
                   AttributeType: S
             KeySchema:
                 - AttributeName: token
                   KeyType: HASH
+            BillingMode: PROVISIONED
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
             TimeToLiveSpecification:
                 AttributeName: timestamp
                 Enabled: true
 
-    StoriesTable:
-        Type: AWS::DynamoDB::Table
-        Properties:
-            TableName: tweeterStories
-            BillingMode: PAY_PER_REQUEST
-            AttributeDefinitions:
-                - AttributeName: userAlias
-                  AttributeType: S
-                - AttributeName: timestamp
-                  AttributeType: N
-            KeySchema:
-                - AttributeName: userAlias
-                  KeyType: HASH
-                - AttributeName: timestamp
-                  KeyType: RANGE
-
-    FeedsTable:
-        Type: AWS::DynamoDB::Table
-        Properties:
-            TableName: tweeterFeeds
-            BillingMode: PAY_PER_REQUEST
-            AttributeDefinitions:
-                - AttributeName: userAlias
-                  AttributeType: S
-                - AttributeName: timestamp
-                  AttributeType: N
-            KeySchema:
-                - AttributeName: userAlias
-                  KeyType: HASH
-                - AttributeName: timestamp
-                  KeyType: RANGE
-
-    ProfileImagesBucket:
+    # S3 Bucket for user profile images
+    tweeterImagesBucket:
         Type: AWS::S3::Bucket
         Properties:
-            BucketName: !Sub tweeter-profile-images-batfat00
+            BucketName: !Sub "tweeter-images-${AWS::AccountId}-${AWS::Region}"
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            CorsConfiguration:
+                CorsRules:
+                    - AllowedHeaders:
+                          - "*"
+                      AllowedMethods:
+                          - GET
+                          - PUT
+                          - POST
+                          - DELETE
+                          - HEAD
+                      AllowedOrigins:
+                          - "*"
+                      MaxAge: 3000

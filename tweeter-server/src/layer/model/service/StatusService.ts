@@ -1,24 +1,18 @@
-import { FakeData, Status, StatusDto, UserDto } from "tweeter-shared";
-import { AuthorizationService } from "../../auth/AuthorizationService";
+import { StatusDto } from "tweeter-shared";
 import { DAOFactory } from "../../../daos/DAOFactory";
-import { StatusItem } from "../persistence/StatusItem";
+import { AuthTokenDAO } from "../../../daos/interfaces/AuthTokenDAO";
+import { FeedDAO } from "../../../daos/interfaces/FeedDAO";
+import { StatusDAO } from "../../../daos/interfaces/StatusDAO";
 
 export class StatusService {
-    constructor(
-        private factory: DAOFactory,
-        private auth: AuthorizationService
-    ) {}
+    private authTokenDao: AuthTokenDAO;
+    private statusDao: StatusDAO;
+    private feedDao: FeedDAO;
 
-    public async loadMoreStoryItems(
-        token: string,
-        userAlias: string,
-        pageSize: number,
-        lastItem: StatusDto | null
-    ): Promise<[StatusDto[], boolean]> {
-        await this.auth.requireAuthorized(token);
-        return this.factory
-            .createStatusDAO()
-            .getPageOfStatuses(userAlias, pageSize, lastItem);
+    constructor(factory: DAOFactory) {
+        this.authTokenDao = factory.createAuthTokenDAO();
+        this.statusDao = factory.createStatusDAO();
+        this.feedDao = factory.createFeedDAO();
     }
 
     public async loadMoreFeedItems(
@@ -27,48 +21,49 @@ export class StatusService {
         pageSize: number,
         lastItem: StatusDto | null
     ): Promise<[StatusDto[], boolean]> {
-        await this.auth.requireAuthorized(token);
-        return this.factory
-            .createFeedDAO()
-            .getPageOfFeedItems(userAlias, pageSize, lastItem);
+        // validate token
+        const validated = await this.authTokenDao.validate(token);
+        if (!validated) {
+            throw new Error("Invalid or expired auth token");
+        }
+
+        const lastTimestamp = lastItem ? lastItem.timestamp : null;
+        return this.feedDao.getFeed(userAlias, lastTimestamp, pageSize);
+    }
+
+    public async loadMoreStoryItems(
+        token: string,
+        userAlias: string,
+        pageSize: number,
+        lastItem: StatusDto | null
+    ): Promise<[StatusDto[], boolean]> {
+        // validate token
+        const validated = await this.authTokenDao.validate(token);
+        if (!validated) {
+            throw new Error("Invalid or expired auth token");
+        }
+
+        const lastTimestamp = lastItem ? lastItem.timestamp : null;
+        return this.statusDao.getUserStory(userAlias, lastTimestamp, pageSize);
     }
 
     public async postStatus(
         token: string,
         newStatus: StatusDto
-    ): Promise<void> {
-        const alias = await this.auth.requireAuthorized(token);
-
-        const item: StatusItem = {
-            ...newStatus,
-            userAlias: alias, // top-level partition key
-            user: { ...newStatus.user, alias }, // keep nested user object
-        };
-
-        // 1. Put status in stories table
-        await this.factory.createStatusDAO().putStatus(item);
-
-        // 2. Fan-out to followers’ feeds
-        const followers = await this.factory
-            .createFollowDAO()
-            .getFollowers(alias, 100, undefined);
-        const [users] = followers;
-        for (const follower of users) {
-            await this.factory
-                .createFeedDAO()
-                .batchPutFeedItems(follower.alias, [newStatus]);
+    ): Promise<StatusDto> {
+        // validate token and get poster alias
+        const posterAlias = await this.authTokenDao.validate(token);
+        if (!posterAlias) {
+            throw new Error("Invalid or expired auth token");
         }
-    }
 
-    public async getIsFollowerStatus(
-        token: string,
-        user: UserDto,
-        selectedUser: UserDto
-    ): Promise<boolean> {
-        const requesterAlias = await this.auth.requireAuthorized(token);
-        const follow = await this.factory
-            .createFollowDAO()
-            .getFollow(user.alias, selectedUser.alias);
-        return follow !== null;
+        if (posterAlias !== newStatus.user.alias) {
+            throw new Error("Authenticated user does not match status author");
+        }
+
+        const statusToSave: StatusDto = { ...newStatus, timestamp: Date.now() };
+        await this.statusDao.create(statusToSave);
+        // Fan-out to followers' feeds is now handled asynchronously via SQS.
+        return statusToSave;
     }
 }

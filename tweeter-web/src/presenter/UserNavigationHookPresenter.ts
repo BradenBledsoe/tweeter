@@ -27,10 +27,7 @@ export class UserNavigationHookPresenter extends Presenter<UserNavigationHookVie
         await this.doFailureReportingOperation(async () => {
             const alias = this.extractAlias(event.target.toString());
 
-            const toUser = await this.service.getUser({
-                token: authToken.token,
-                userAlias: alias,
-            });
+            const toUser = await this.service.getUser(authToken!, alias);
 
             if (toUser) {
                 if (!toUser.equals(displayedUser)) {

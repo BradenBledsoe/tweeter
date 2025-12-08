@@ -8,9 +8,9 @@ import { FeedDAO } from "./interfaces/FeedDAO";
 
 export interface DAOFactory {
     createUserDAO(): UserDAO;
+    createAuthTokenDAO(): AuthTokenDAO;
     createFollowDAO(): FollowDAO;
     createStatusDAO(): StatusDAO;
     createFeedDAO(): FeedDAO;
-    createAuthTokenDAO(): AuthTokenDAO;
     createS3DAO(): S3DAO;
 }

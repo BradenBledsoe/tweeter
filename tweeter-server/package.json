@@ -23,6 +23,7 @@
         "uuid": "^9.0.1"
     },
     "devDependencies": {
+        "@aws-sdk/client-sqs": "^3.947.0",
         "@types/aws-sdk": "^0.0.42"
     }
 }

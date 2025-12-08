@@ -1,7 +1,6 @@
-import { AuthTokenRecord } from "../../layer/model/persistence/AuthTokenRecord";
-
 export interface AuthTokenDAO {
-    putToken(token: AuthTokenRecord): Promise<void>;
-    getToken(token: string): Promise<AuthTokenRecord | null>;
-    deleteToken(token: string): Promise<void>;
+    create(token: string, userAlias: string, timestamp: number): Promise<void>;
+    validate(token: string): Promise<string | null>;
+    delete(token: string): Promise<void>;
+    refresh(token: string, newTimestamp: number): Promise<void>;
 }

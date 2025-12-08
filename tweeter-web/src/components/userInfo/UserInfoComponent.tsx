@@ -2,17 +2,13 @@ import "./UserInfoComponent.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMessageActions } from "../toaster/MessageHooks";
-import { userInfoActions, userInfoList } from "./UserInfoHooks";
+import { userInfoList, userInfoActions } from "./UserInfoHooks";
 import {
     UserInfoView,
     UserInfoPresenter,
 } from "../../presenter/UserInfoPresenter";
 
-interface Props {
-    presenterFactory: (listener: UserInfoView) => UserInfoPresenter;
-}
-
-const UserInfo = (props: Props) => {
+const UserInfo = () => {
     const [isFollower, setIsFollower] = useState(false);
     const [followeeCount, setFolloweeCount] = useState(-1);
     const [followerCount, setFollowerCount] = useState(-1);
@@ -25,23 +21,6 @@ const UserInfo = (props: Props) => {
     const { setDisplayedUser } = userInfoActions();
     const navigate = useNavigate();
     const location = useLocation();
-
-    const listener: UserInfoView = {
-        displayErrorMessage: displayErrorMessage,
-        displayInfoMessage: displayInfoMessage,
-        deleteMessage: deleteMessage,
-        navigate: navigate,
-        setIsLoading: setIsLoading,
-        setIsFollower: setIsFollower,
-        setFolloweeCount: setFolloweeCount,
-        setFollowerCount: setFollowerCount,
-        setDisplayedUser: setDisplayedUser,
-    };
-
-    const presenterRef = useRef<UserInfoPresenter | null>(null);
-    if (!presenterRef.current) {
-        presenterRef.current = props.presenterFactory(listener);
-    }
 
     if (!displayedUser) {
         setDisplayedUser(currentUser!);
@@ -57,24 +36,22 @@ const UserInfo = (props: Props) => {
         presenterRef.current!.setNumbFollowers(authToken!, displayedUser!);
     }, [displayedUser]);
 
-    const switchToLoggedInUser = (event: React.MouseEvent): void => {
-        event.preventDefault();
-        presenterRef.current!.switchToLoggedInUser(currentUser!);
+    const listener: UserInfoView = {
+        displayErrorMessage: displayErrorMessage,
+        displayInfoMessage: displayInfoMessage,
+        deleteMessage: deleteMessage,
+        setIsFollower: setIsFollower,
+        setFolloweeCount: setFolloweeCount,
+        setFollowerCount: setFollowerCount,
+        setIsLoading: setIsLoading,
+        setDisplayedUser: setDisplayedUser,
+        navigate: navigate,
     };
 
-    const followDisplayedUser = async (
-        event: React.MouseEvent
-    ): Promise<void> => {
-        event.preventDefault();
-        presenterRef.current!.followDisplayedUser(authToken!, displayedUser!);
-    };
-
-    const unfollowDisplayedUser = async (
-        event: React.MouseEvent
-    ): Promise<void> => {
-        event.preventDefault();
-        presenterRef.current!.unfollowDisplayedUser(authToken!, displayedUser!);
-    };
+    const presenterRef = useRef<UserInfoPresenter | null>(null);
+    if (!presenterRef.current) {
+        presenterRef.current = new UserInfoPresenter(listener);
+    }
 
     return (
         <>
@@ -99,7 +76,13 @@ const UserInfo = (props: Props) => {
                                     Return to{" "}
                                     <Link
                                         to={`./${currentUser.alias}`}
-                                        onClick={switchToLoggedInUser}
+                                        onClick={(event) =>
+                                            presenterRef.current!.switchToLoggedInUser(
+                                                event,
+                                                currentUser,
+                                                location.pathname
+                                            )
+                                        }
                                     >
                                         logged in user
                                     </Link>
@@ -126,7 +109,13 @@ const UserInfo = (props: Props) => {
                                             className="btn btn-md btn-secondary me-1"
                                             type="submit"
                                             style={{ width: "6em" }}
-                                            onClick={unfollowDisplayedUser}
+                                            onClick={(event) =>
+                                                presenterRef.current!.unfollowDisplayedUser(
+                                                    event,
+                                                    authToken!,
+                                                    displayedUser!
+                                                )
+                                            }
                                         >
                                             {isLoading ? (
                                                 <span
@@ -144,7 +133,13 @@ const UserInfo = (props: Props) => {
                                             className="btn btn-md btn-primary me-1"
                                             type="submit"
                                             style={{ width: "6em" }}
-                                            onClick={followDisplayedUser}
+                                            onClick={(event) =>
+                                                presenterRef.current!.followDisplayedUser(
+                                                    event,
+                                                    authToken!,
+                                                    displayedUser!
+                                                )
+                                            }
                                         >
                                             {isLoading ? (
                                                 <span

@@ -1,11 +1,13 @@
 import { StatusDto } from "tweeter-shared";
 
 export interface FeedDAO {
-    batchPutFeedItems(userAlias: string, items: StatusDto[]): Promise<void>;
-    getPageOfFeedItems(
-        userAlias: string,
-        pageSize: number,
-        lastItem: StatusDto | null
+    addStatusToFeeds(
+        status: StatusDto,
+        followerAliases: string[]
+    ): Promise<void>;
+    getFeed(
+        feedOwnerAlias: string,
+        lastTimestamp: number | null,
+        limit: number
     ): Promise<[StatusDto[], boolean]>;
-    deleteFeedItem(userAlias: string, statusId: string): Promise<void>;
 }

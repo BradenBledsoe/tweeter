@@ -1,50 +1,83 @@
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { StatusDAO } from "../interfaces/StatusDAO";
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
+import {
+    DynamoDBDocumentClient,
+    PutCommand,
+    QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { StatusDto } from "tweeter-shared";
-import { StatusItem } from "../../layer/model/persistence/StatusItem";
 
 export class DynamoStatusDAO implements StatusDAO {
-    readonly tableName = "tweeterStories";
-    private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
+    private client: DynamoDBDocumentClient;
+    private tableName = "tweeterStatuses";
+    private authorAttr = "author_alias";
+    private timestampAttr = "timestamp";
 
-    // ---------- PUT ----------
-    public async putStatus(status: StatusItem): Promise<void> {
-        const params = {
-            TableName: this.tableName,
-            Item: status,
-        };
-        await this.client.send(new PutCommand(params));
+    constructor() {
+        this.client = DynamoDBDocumentClient.from(
+            new DynamoDBClient({
+                region: process.env.AWS_REGION || "us-east-1",
+            })
+        );
     }
 
-    // ---------- QUERY ----------
-    public async getPageOfStatuses(
-        userAlias: string,
-        pageSize: number,
-        lastItem: StatusDto | null
+    async create(status: StatusDto): Promise<void> {
+        const params = {
+            TableName: this.tableName,
+            Item: {
+                [this.authorAttr]: status.user.alias,
+                [this.timestampAttr]: status.timestamp,
+                post: status.post,
+                user: status.user,
+            },
+        };
+
+        try {
+            await this.client.send(new PutCommand(params));
+        } catch (error) {
+            throw new Error(`Failed to create status: ${error}`);
+        }
+    }
+
+    async getUserStory(
+        authorAlias: string,
+        lastTimestamp: number | null,
+        limit: number
     ): Promise<[StatusDto[], boolean]> {
-        console.log("HIT Getting page of statuses for userAlias:", userAlias);
-        console.log("lastItem:", lastItem);
         const params: any = {
             TableName: this.tableName,
-            KeyConditionExpression: "userAlias = :a",
-            ExpressionAttributeValues: { ":a": userAlias },
-            Limit: pageSize,
+            KeyConditionExpression: `${this.authorAttr} = :author`,
+            ExpressionAttributeValues: {
+                ":author": authorAlias,
+            },
             ScanIndexForward: false,
+            Limit: limit + 1,
         };
-        if (lastItem) {
+
+        if (lastTimestamp) {
             params.ExclusiveStartKey = {
-                userAlias,
-                timestamp: Number(lastItem.timestamp),
+                [this.authorAttr]: authorAlias,
+                [this.timestampAttr]: lastTimestamp,
             };
         }
-        console.log("Query params:", JSON.stringify(params, null, 2));
 
-        const data = await this.client.send(new QueryCommand(params));
-        const items =
-            (data.Items?.map((i) => unmarshall(i)) as StatusDto[]) ?? [];
-        const hasMore = data.LastEvaluatedKey !== undefined;
-        return [items, hasMore];
+        try {
+            const result = await this.client.send(new QueryCommand(params));
+            const items = result.Items || [];
+            const statuses: StatusDto[] = items
+                .slice(0, limit)
+                .map((it: any) => {
+                    return {
+                        post: it.post,
+                        user: it.user,
+                        timestamp: it.timestamp,
+                        segments: it.segments || [],
+                    } as StatusDto;
+                });
+            const hasMore = items.length > limit;
+            return [statuses, hasMore];
+        } catch (error) {
+            throw new Error(`Failed to get user story: ${error}`);
+        }
     }
 }

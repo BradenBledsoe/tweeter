@@ -1,44 +1,48 @@
-import { AuthTokenDto, FakeData, UserDto } from "tweeter-shared";
+import { AuthTokenDto, UserDto } from "tweeter-shared";
 import { DAOFactory } from "../../../daos/DAOFactory";
-import { AuthorizationService } from "../../auth/AuthorizationService";
 import * as bcrypt from "bcryptjs";
-import { AuthTokenRecord } from "../persistence/AuthTokenRecord";
+import { v4 as uuid } from "uuid";
+import { UserDAO } from "../../../daos/interfaces/UserDAO";
+import { AuthTokenDAO } from "../../../daos/interfaces/AuthTokenDAO";
+import { S3DAO } from "../../../daos/interfaces/S3DAO";
 export class UserService {
-    constructor(
-        private factory: DAOFactory,
-        private auth: AuthorizationService
-    ) {}
+    private userDao: UserDAO;
+    private authTokenDao: AuthTokenDAO;
+    private s3Dao: S3DAO;
+
+    constructor(factory: DAOFactory) {
+        this.userDao = factory.createUserDAO();
+        this.authTokenDao = factory.createAuthTokenDAO();
+        this.s3Dao = factory.createS3DAO();
+    }
 
     public async getUser(
         token: string,
         alias: string
     ): Promise<UserDto | null> {
-        await this.auth.requireAuthorized(token);
-        return this.factory.createUserDAO().getUser(alias);
+        // Validate token
+        const userAlias = await this.authTokenDao.validate(token);
+        if (!userAlias) {
+            throw new Error("Invalid or expired auth token");
+        }
+        // Fetch user
+        return await this.userDao.getByAlias(alias);
     }
 
     public async login(
         alias: string,
         password: string
     ): Promise<[UserDto, AuthTokenDto]> {
-        // get stored hash
-        const hash = await this.factory.createUserDAO().getPasswordHash(alias);
-        if (!hash || !(await bcrypt.compare(password, hash))) {
-            throw new Error("unauthorized: Invalid credentials");
+        // Validate credentials
+        const user = await this.userDao.validateCredentials(alias, password);
+        if (!user) {
+            throw new Error("Invalid alias or password");
         }
-
-        const user = await this.factory.createUserDAO().getUser(alias);
-        if (!user) throw new Error("bad-request: User does not exist");
-
-        const token = crypto.randomUUID();
+        // Create auth token
+        const token = uuid();
         const timestamp = Date.now();
-        const authToken: AuthTokenRecord = {
-            token,
-            timestamp,
-            userAlias: alias,
-        };
-
-        await this.factory.createAuthTokenDAO().putToken(authToken);
+        await this.authTokenDao.create(token, alias, timestamp);
+        const authToken: AuthTokenDto = { token, timestamp };
         return [user, authToken];
     }
 
@@ -47,44 +51,37 @@ export class UserService {
         lastName: string,
         alias: string,
         password: string,
-        userImageBytes: string,
+        imageStringBase64: string,
         imageFileExtension: string
     ): Promise<[UserDto, AuthTokenDto]> {
-        const s3 = this.factory.createS3DAO();
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // upload profile image
-        const imageUrl = await s3.uploadProfileImage(
-            alias,
-            userImageBytes,
-            imageFileExtension
+        // Upload image
+        const imageFileName = `profile-images/${uuid()}.${imageFileExtension}`;
+        const imageUrl = await this.s3Dao.putImage(
+            imageFileName,
+            imageStringBase64
         );
 
-        const passwordHash = await bcrypt.hash(password, 10);
-
+        // Create user
         const user: UserDto = {
             alias,
             firstName,
             lastName,
             imageUrl,
         };
+        await this.userDao.create(user, hashedPassword);
 
-        await this.factory.createUserDAO().createUser(user, passwordHash);
-
-        const token = crypto.randomUUID();
+        // Create auth token
+        const token = uuid();
         const timestamp = Date.now();
-        const authToken: AuthTokenRecord = {
-            token,
-            timestamp,
-            userAlias: alias,
-        };
-
-        await this.factory.createAuthTokenDAO().putToken(authToken);
+        await this.authTokenDao.create(token, alias, timestamp);
+        const authToken: AuthTokenDto = { token, timestamp };
         return [user, authToken];
     }
 
     public async logout(token: string): Promise<void> {
-        console.log("Logging out token:", token);
-        await this.auth.requireAuthorized(token);
-        await this.factory.createAuthTokenDAO().deleteToken(token);
+        await this.authTokenDao.delete(token);
     }
 }

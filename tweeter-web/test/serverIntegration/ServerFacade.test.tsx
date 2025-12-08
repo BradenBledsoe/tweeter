@@ -1,68 +1,106 @@
 import "isomorphic-fetch";
-import "@testing-library/jest-dom";
 import { ServerFacade } from "../../src/network/ServerFacade";
-import {
-    TweeterRequest,
-    PagedUserItemRequest,
-    AuthToken,
-    User,
-} from "tweeter-shared";
+import { User, AuthToken } from "tweeter-shared";
 
 describe("ServerFacade Integration Tests", () => {
     let serverFacade: ServerFacade;
-    let authToken: AuthToken;
-    let user: User;
-    beforeEach(async () => {
+
+    beforeAll(() => {
         serverFacade = new ServerFacade();
-
-        const alias = `@jestUser${Date.now()}`;
-
-        const [registeredUser, token] = await serverFacade.register({
-            userAlias: "@jestUser",
-            firstName: "Jest",
-            lastName: "User",
-            password: "password123",
-            userImageBytes: "efwslnf32",
-            imageFileExtension: "yes/hello",
-        });
-
-        user = registeredUser;
-        authToken = token;
     });
 
-    test("Register - should register a new user successfully", async () => {
-        expect(user).toBeDefined();
-        expect(typeof user.firstName).toBe("string");
-        expect(typeof user.lastName).toBe("string");
-        expect(typeof user.alias).toBe("string");
-        expect(authToken).toBeDefined();
-        expect(typeof authToken.token).toBe("string");
+    describe("Register", () => {
+        it("should successfully register a new user", async () => {
+            const firstName = "Test";
+            const lastName = "User";
+            const alias = "@testuser" + Date.now();
+            const password = "password123";
+            const imageStringBase64 =
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+            const imageFileExtension = "jpg";
+
+            const [user, token] = await serverFacade.register(
+                firstName,
+                lastName,
+                alias,
+                password,
+                imageStringBase64,
+                imageFileExtension
+            );
+
+            expect(user).toBeDefined();
+            expect(user).toBeInstanceOf(User);
+            expect(user.firstName).toBeDefined();
+            expect(user.lastName).toBeDefined();
+            expect(user.alias).toBeDefined();
+            expect(user.imageUrl).toBeDefined();
+
+            expect(token).toBeDefined();
+            expect(typeof token).toBe("string");
+            expect(token.length).toBeGreaterThan(0);
+        }, 10000);
     });
 
-    test("GetFollowers - should return a list of followers", async () => {
-        const request: PagedUserItemRequest = {
-            token: authToken.token,
-            userAlias: user.alias,
-            pageSize: 10,
-            lastItem: null,
-        };
+    describe("GetFollowers", () => {
+        it("should successfully get followers", async () => {
+            const authToken = "test-token";
+            const userAlias = "@allen";
+            const pageSize = 10;
+            const lastItem = null;
 
-        const [followers, hasMore] = await serverFacade.getMoreFollowers(
-            request
-        );
+            const [followers, hasMore] = await serverFacade.getMoreFollowers(
+                authToken,
+                userAlias,
+                pageSize,
+                lastItem
+            );
 
-        expect(Array.isArray(followers)).toBe(true);
-        expect(typeof hasMore).toBe("boolean");
+            expect(followers).toBeDefined();
+            expect(Array.isArray(followers)).toBe(true);
+            expect(followers.length).toBeGreaterThan(0);
+            expect(followers.length).toBeLessThanOrEqual(pageSize);
+
+            followers.forEach((follower) => {
+                expect(follower).toBeInstanceOf(User);
+                expect(follower.firstName).toBeDefined();
+                expect(follower.lastName).toBeDefined();
+                expect(follower.alias).toBeDefined();
+                expect(follower.imageUrl).toBeDefined();
+            });
+
+            expect(typeof hasMore).toBe("boolean");
+        }, 10000);
     });
 
-    test("GetFollowerCount - should return a numeric count", async () => {
-        const request: TweeterRequest = {
-            token: authToken.token,
-            userAlias: user.alias,
-        };
-        const count = await serverFacade.getFollowerCount(request);
+    describe("GetFollowersCount", () => {
+        it("should successfully get followers count", async () => {
+            const authToken = "test-token";
+            const user = new User("Test", "User", "@allen", "test-image-url");
 
-        expect(typeof count).toBe("number");
-        expect(count).toBeGreaterThanOrEqual(0);
+            const followersCount = await serverFacade.getFollowerCount(
+                authToken,
+                user
+            );
+
+            expect(followersCount).toBeDefined();
+            expect(typeof followersCount).toBe("number");
+            expect(followersCount).toBeGreaterThanOrEqual(0);
+        }, 10000);
+    });
+
+    describe("GetFollowingCount", () => {
+        it("should successfully get following count", async () => {
+            const authToken = "test-token";
+            const user = new User("Test", "User", "@allen", "test-image-url");
+
+            const followingCount = await serverFacade.getFolloweeCount(
+                authToken,
+                user
+            );
+
+            expect(followingCount).toBeDefined();
+            expect(typeof followingCount).toBe("number");
+            expect(followingCount).toBeGreaterThanOrEqual(0);
+        }, 10000);
     });
 });

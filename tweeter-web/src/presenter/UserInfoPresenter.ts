@@ -1,36 +1,44 @@
-import { AuthToken, TweeterRequest, User } from "tweeter-shared";
-import { NavigateFunction } from "react-router-dom";
-import { StatusService } from "../model.service/StatusService";
+import { AuthToken, User } from "tweeter-shared";
 import { FollowService } from "../model.service/FollowService";
-import { MessageView, Presenter } from "./Presenter";
+import { MessageView, NavigatingView, Presenter } from "./Presenter";
 
-export interface UserInfoView extends MessageView {
-    navigate: NavigateFunction;
-    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsFollower: React.Dispatch<React.SetStateAction<boolean>>;
-    setFolloweeCount: React.Dispatch<React.SetStateAction<number>>;
-    setFollowerCount: React.Dispatch<React.SetStateAction<number>>;
+export interface UserInfoView extends MessageView, NavigatingView {
+    setIsFollower: (isFollower: boolean) => void;
+    setFolloweeCount: (count: number) => void;
+    setFollowerCount: (count: number) => void;
+    setIsLoading: (isLoading: boolean) => void;
     setDisplayedUser: (user: User) => void;
 }
 
 export class UserInfoPresenter extends Presenter<UserInfoView> {
-    private statusService: StatusService;
-    private followService: FollowService;
+    private followService: FollowService = new FollowService();
 
     public constructor(view: UserInfoView) {
         super(view);
-        this.statusService = new StatusService();
-        this.followService = new FollowService();
     }
 
-    public switchToLoggedInUser = (currentUser: User): void => {
-        this.view.setDisplayedUser(currentUser!);
-        this.view.navigate(`${this.getBaseUrl()}/${currentUser!.alias}`);
-    };
+    private async doFollowingOperation(
+        followingOperation: () => Promise<[number, number]>,
+        errorOperationDescription: string,
+        operationDescription: string,
+        isFollowing: boolean
+    ): Promise<void> {
+        let userToast = "";
+        try {
+            this.view.setIsLoading(true);
+            userToast = this.view.displayInfoMessage(operationDescription, 0);
 
-    private getBaseUrl(): string {
-        const segments = location.pathname.split("/@");
-        return segments.length > 1 ? segments[0] : "/";
+            await this.doFailureReportingOperation(async () => {
+                const [followerCount, followeeCount] =
+                    await followingOperation();
+                this.view.setIsFollower(isFollowing);
+                this.view.setFollowerCount(followerCount);
+                this.view.setFolloweeCount(followeeCount);
+            }, errorOperationDescription);
+        } finally {
+            this.view.deleteMessage(userToast);
+            this.view.setIsLoading(false);
+        }
     }
 
     public async setIsFollowerStatus(
@@ -38,99 +46,101 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
         currentUser: User,
         displayedUser: User
     ) {
-        await this.doFailureReportingOperation(async () => {
-            if (currentUser === displayedUser) {
+        this.doFailureReportingOperation(async () => {
+            if (
+                currentUser &&
+                displayedUser &&
+                currentUser.equals(displayedUser)
+            ) {
                 this.view.setIsFollower(false);
             } else {
                 this.view.setIsFollower(
-                    await this.statusService.getIsFollowerStatus({
-                        token: authToken!.token,
-                        user: currentUser!,
-                        selectedUser: displayedUser!,
-                    })
+                    await this.followService.getIsFollowerStatus(
+                        authToken!,
+                        currentUser!,
+                        displayedUser!
+                    )
                 );
             }
         }, "determine follower status");
     }
 
-    private async updateFollowCount(
-        authToken: AuthToken,
-        displayedUser: User,
-        getFollowCount: (request: TweeterRequest) => Promise<number>,
-        setFollowCount: (count: number) => void,
-        description: string
-    ) {
-        await this.doFailureReportingOperation(async () => {
-            const count = await getFollowCount({
-                token: authToken.token,
-                userAlias: displayedUser.alias,
-            });
-            setFollowCount(count);
-        }, description);
-    }
-
     public async setNumbFollowees(authToken: AuthToken, displayedUser: User) {
-        await this.updateFollowCount(
-            authToken,
-            displayedUser,
-            this.followService.getFolloweeCount.bind(this.followService),
-            this.view.setFolloweeCount,
-            "get followees count"
-        );
+        this.doFailureReportingOperation(async () => {
+            this.view.setFolloweeCount(
+                await this.followService.getFolloweeCount(
+                    authToken,
+                    displayedUser
+                )
+            );
+        }, "get followees count");
     }
 
     public async setNumbFollowers(authToken: AuthToken, displayedUser: User) {
-        await this.updateFollowCount(
-            authToken,
-            displayedUser,
-            this.followService.getFollowerCount.bind(this.followService),
-            this.view.setFollowerCount,
-            "get followers count"
+        this.doFailureReportingOperation(async () => {
+            this.view.setFollowerCount(
+                await this.followService.getFollowerCount(
+                    authToken,
+                    displayedUser
+                )
+            );
+        }, "get followers count");
+    }
+
+    public switchToLoggedInUser(
+        event: React.MouseEvent,
+        currentUser: User,
+        currentPath: string
+    ): void {
+        event.preventDefault();
+        this.view.setDisplayedUser(currentUser);
+        this.view.navigate(
+            `${this.getBaseUrl(currentPath)}/${currentUser.alias}`
         );
     }
 
-    private async modifyFollowStatus(
+    private getBaseUrl(currentPath: string): string {
+        const segments = currentPath.split("/@");
+        return segments.length > 1 ? segments[0] : "/";
+    }
+
+    public async followDisplayedUser(
+        event: React.MouseEvent,
         authToken: AuthToken,
-        user: User,
-        action: "follow" | "unfollow"
-    ) {
-        let toastId = "";
-        const isFollowing = action === "follow";
-        const messageVerb = isFollowing ? "Following" : "Unfollowing";
-        const serviceMethod = isFollowing
-            ? this.followService.follow.bind(this.followService)
-            : this.followService.unfollow.bind(this.followService);
+        displayedUser: User
+    ): Promise<void> {
+        event.preventDefault();
 
-        await this.doFailureReportingOperation(
+        this.doFollowingOperation(
             async () => {
-                this.view.setIsLoading(true);
-                toastId = this.view.displayInfoMessage(
-                    `${messageVerb} ${user.name}...`,
-                    0
+                return await this.followService.follow(
+                    authToken!,
+                    displayedUser!
                 );
-
-                const [followerCount, followeeCount] = await serviceMethod({
-                    token: authToken.token,
-                    userAlias: user.alias,
-                });
-
-                this.view.setIsFollower(isFollowing);
-                this.view.setFollowerCount(followerCount);
-                this.view.setFolloweeCount(followeeCount);
             },
-            `${action} user`,
-            async () => {
-                this.view.deleteMessage(toastId);
-                this.view.setIsLoading(false);
-            }
+            "follow user",
+            "Following " + displayedUser!.name + "...",
+            true
         );
     }
 
-    public async followDisplayedUser(authToken: AuthToken, user: User) {
-        await this.modifyFollowStatus(authToken, user, "follow");
-    }
+    public async unfollowDisplayedUser(
+        event: React.MouseEvent,
+        authToken: AuthToken,
+        displayedUser: User
+    ): Promise<void> {
+        event.preventDefault();
 
-    public async unfollowDisplayedUser(authToken: AuthToken, user: User) {
-        await this.modifyFollowStatus(authToken, user, "unfollow");
+        this.doFollowingOperation(
+            async () => {
+                return await this.followService.unfollow(
+                    authToken!,
+                    displayedUser!
+                );
+            },
+            "unfollow user",
+            "Unfollowing " + displayedUser!.name + "...",
+            false
+        );
     }
 }

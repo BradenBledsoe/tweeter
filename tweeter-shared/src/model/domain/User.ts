@@ -81,6 +81,12 @@ export class User {
         return JSON.stringify(this);
     }
 
+    public static fromDto(dto: UserDto | null): User | null {
+        return dto == null
+            ? null
+            : new User(dto.firstName, dto.lastName, dto.alias, dto.imageUrl);
+    }
+
     public get dto(): UserDto {
         return {
             firstName: this.firstName,
@@ -88,11 +94,5 @@ export class User {
             alias: this.alias,
             imageUrl: this.imageUrl,
         };
-    }
-
-    public static fromDto(dto: UserDto | null): User | null {
-        return dto == null
-            ? null
-            : new User(dto.firstName, dto.lastName, dto.alias, dto.imageUrl);
     }
 }

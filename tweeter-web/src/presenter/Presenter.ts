@@ -2,6 +2,10 @@ export interface View {
     displayErrorMessage: (message: string) => void;
 }
 
+export interface NavigatingView extends View {
+    navigate: (path: string) => void;
+}
+
 export interface MessageView extends View {
     displayInfoMessage: (
         message: string,

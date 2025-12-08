@@ -1,10 +1,10 @@
 import { StatusDto } from "tweeter-shared";
 
 export interface StatusDAO {
-    putStatus(status: StatusDto): Promise<void>;
-    getPageOfStatuses(
+    create(status: StatusDto): Promise<void>;
+    getUserStory(
         authorAlias: string,
-        pageSize: number,
-        lastItem?: StatusDto | null
+        lastTimestamp: number | null,
+        limit: number
     ): Promise<[StatusDto[], boolean]>;
 }

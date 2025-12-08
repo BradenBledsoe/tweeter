@@ -1,43 +1,38 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+    S3Client,
+    PutObjectCommand,
+    ObjectCannedACL,
+} from "@aws-sdk/client-s3";
 import { S3DAO } from "./interfaces/S3DAO";
-import crypto from "crypto";
+
+const REGION = process.env.AWS_REGION || "us-east-1";
+const BUCKET =
+    process.env.TWEETER_IMAGES_BUCKET ||
+    `tweeter-images-${process.env.AWS_ACCOUNT_ID || "local"}-${REGION}`;
 
 export class S3ProfileDAO implements S3DAO {
-    private client = new S3Client({ region: process.env.AWS_REGION });
-    private bucket = "tweeter-profile-images-batfat00";
-
-    public async uploadProfileImage(
-        userAlias: string,
-        imageStringBase64Encoded: string,
-        fileExtension: string // "png" or "jpg"
+    async putImage(
+        fileName: string,
+        imageStringBase64Encoded: string
     ): Promise<string> {
-        // Generate a unique filename
-        const fileName = `${userAlias}_${crypto.randomUUID()}.${fileExtension.toLowerCase()}`;
-
-        // Decode Base64
-        const decodedImageBuffer = Buffer.from(
+        let decodedImageBuffer: Buffer = Buffer.from(
             imageStringBase64Encoded,
             "base64"
         );
-
-        // Determine MIME type
-        const contentType =
-            fileExtension.toLowerCase() === "png" ? "image/png" : "image/jpeg";
-
         const s3Params = {
-            Bucket: this.bucket,
-            Key: `image/${fileName}`,
+            Bucket: BUCKET,
+            Key: "image/" + fileName,
             Body: decodedImageBuffer,
-            ContentType: contentType,
-            ObjectCannedACL: "public-read", // Makes the image publicly accessible
+            ContentType: "image/png",
+            ACL: ObjectCannedACL.public_read,
         };
-
+        const c = new PutObjectCommand(s3Params);
+        const client = new S3Client({ region: REGION });
         try {
-            await this.client.send(new PutObjectCommand(s3Params));
-            console.log("Image uploaded successfully to S3:", fileName);
-            return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/image/${fileName}`;
+            await client.send(c);
+            return `https://${BUCKET}.s3.${REGION}.amazonaws.com/image/${fileName}`;
         } catch (error) {
-            throw new Error("S3 put image failed with: " + error);
+            throw Error("s3 put image failed with: " + error);
         }
     }
 }

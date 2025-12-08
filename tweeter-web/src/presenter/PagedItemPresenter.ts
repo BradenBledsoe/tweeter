@@ -54,10 +54,7 @@ export abstract class PagedItemPresenter<
         authToken: AuthToken,
         alias: string
     ): Promise<User | null> {
-        return this.userService.getUser({
-            token: authToken.token,
-            userAlias: alias,
-        });
+        return this.userService.getUser(authToken, alias);
     }
 
     public async loadMoreItems(authToken: AuthToken, userAlias: string) {

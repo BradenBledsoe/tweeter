@@ -1,58 +1,51 @@
-import {
-    AuthToken,
-    PagedStatusItemRequest,
-    Status,
-    User,
-} from "tweeter-shared";
 import "isomorphic-fetch";
-import "@testing-library/jest-dom";
 import { StatusService } from "../../src/model.service/StatusService";
-import { ServerFacade } from "../../src/network/ServerFacade";
+import { AuthToken, Status, User } from "tweeter-shared";
 
 describe("StatusService Integration Tests", () => {
-    let service: StatusService;
+    let statusService: StatusService;
     let authToken: AuthToken;
-    let user: User;
 
-    beforeAll(async () => {
-        const server = new ServerFacade();
-
-        [user, authToken] = await server.login({
-            userAlias: "@allen",
-            password: "password",
-        });
-
-        service = new StatusService();
+    beforeAll(() => {
+        statusService = new StatusService();
+        authToken = new AuthToken("test-token-" + Date.now(), Date.now());
     });
 
-    test("loadMoreStoryItems - should retrieve a page of story items successfully", async () => {
-        const request: PagedStatusItemRequest = {
-            token: authToken.token,
-            userAlias: user.alias,
-            pageSize: 5,
-            lastItem: null,
-        };
+    describe("LoadMoreStoryItems", () => {
+        it("should successfully load user's story items", async () => {
+            const userAlias = "@allen";
+            const pageSize = 10;
+            const lastItem = null;
 
-        const [statuses, hasMore] = await service.loadMoreStoryItems(request);
+            const [storyItems, hasMore] =
+                await statusService.loadMoreStoryItems(
+                    authToken,
+                    userAlias,
+                    pageSize,
+                    lastItem
+                );
 
-        expect(Array.isArray(statuses)).toBe(true);
-        expect(typeof hasMore).toBe("boolean");
+            expect(storyItems).toBeDefined();
+            expect(Array.isArray(storyItems)).toBe(true);
+            expect(storyItems.length).toBeGreaterThan(0);
+            expect(storyItems.length).toBeLessThanOrEqual(pageSize);
 
-        if (statuses.length > 0) {
-            const first = statuses[0];
-            expect(first).toBeInstanceOf(Status);
-            expect(typeof first.post).toBe("string");
-            expect(first.user).toBeDefined();
-            expect(typeof first.user.alias).toBe("string");
-        }
+            storyItems.forEach((status) => {
+                expect(status).toBeInstanceOf(Status);
+                expect(status.post).toBeDefined();
+                expect(typeof status.post).toBe("string");
+                expect(status.user).toBeDefined();
+                expect(status.user).toBeInstanceOf(User);
+                expect(status.timestamp).toBeDefined();
+                expect(typeof status.timestamp).toBe("number");
 
-        expect(statuses.length).toBe(5);
+                expect(status.user.firstName).toBeDefined();
+                expect(status.user.lastName).toBeDefined();
+                expect(status.user.alias).toBeDefined();
+                expect(status.user.imageUrl).toBeDefined();
+            });
 
-        console.log(
-            "Retrieved",
-            statuses.length,
-            "statuses. More pages?",
-            hasMore
-        );
+            expect(typeof hasMore).toBe("boolean");
+        }, 10000);
     });
 });

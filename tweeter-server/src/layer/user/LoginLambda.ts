@@ -1,17 +1,13 @@
-import { AuthorizationResponse, LoginRequest } from "tweeter-shared";
+import { AuthResponse, LoginRequest } from "tweeter-shared";
 import { UserService } from "../model/service/UserService";
 import { DynamoDAOFactory } from "../../daos/dynamo/DynamoDAOFactory";
-import { AuthorizationService } from "../auth/AuthorizationService";
 
-export const handler = async (
-    request: LoginRequest
-): Promise<AuthorizationResponse> => {
+export const handler = async (request: LoginRequest): Promise<AuthResponse> => {
     const factory = new DynamoDAOFactory();
-    const auth = new AuthorizationService(factory.createAuthTokenDAO());
-    const userService = new UserService(factory, auth);
+    const userService = new UserService(factory);
     try {
         const [user, authToken] = await userService.login(
-            request.userAlias!,
+            request.alias,
             request.password
         );
 
@@ -19,9 +15,14 @@ export const handler = async (
             success: true,
             message: null,
             user: user,
-            authToken: authToken,
+            token: authToken,
         };
     } catch (error: any) {
-        throw new Error(`${error.message}`);
+        return {
+            success: false,
+            message: error?.message || "Login failed",
+            token: undefined as any,
+            user: undefined as any,
+        };
     }
 };

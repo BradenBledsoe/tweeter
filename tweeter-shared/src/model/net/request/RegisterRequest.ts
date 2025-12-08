@@ -1,8 +1,10 @@
-import { LoginRequest } from "./LoginRequest";
+import { TweeterRequest } from "./TweeterRequest";
 
-export interface RegisterRequest extends LoginRequest {
+export interface RegisterRequest extends TweeterRequest {
     readonly firstName: string;
     readonly lastName: string;
-    readonly userImageBytes: string;
+    readonly alias: string;
+    readonly password: string;
+    readonly imageStringBase64: string;
     readonly imageFileExtension: string;
 }

@@ -11,11 +11,11 @@ export class StoryPresenter extends StatusItemPresenter {
         authToken: AuthToken,
         userAlias: string
     ): Promise<[Status[], boolean]> {
-        return this.service.loadMoreStoryItems({
-            token: authToken.token,
-            userAlias: userAlias,
-            pageSize: PAGE_SIZE,
-            lastItem: this.lastItem?.dto ?? null,
-        });
+        return this.service.loadMoreStoryItems(
+            authToken,
+            userAlias,
+            PAGE_SIZE,
+            this.lastItem
+        );
     }
 }

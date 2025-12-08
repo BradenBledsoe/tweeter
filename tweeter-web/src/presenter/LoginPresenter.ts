@@ -31,6 +31,6 @@ export class LoginPresenter extends AuthenticationPresenter<AuthenticationView> 
         alias: string,
         password: string
     ): Promise<[User, AuthToken]> {
-        return this.service.login({ userAlias: alias, password: password });
+        return this.service.login(alias, password);
     }
 }

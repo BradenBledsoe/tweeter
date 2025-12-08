@@ -16,12 +16,12 @@ export class Follow {
     public set follower(value: User) {
         this._follower = value;
     }
-    
+
     public get followee(): User {
         return this._followee;
     }
 
     public set followee(value: User) {
         this._followee = value;
-    }    
+    }
 }
