@@ -626,7 +626,7 @@ Resources:
             BillingMode: PROVISIONED
             ProvisionedThroughput:
                 ReadCapacityUnits: 5
-                WriteCapacityUnits: 5
+                WriteCapacityUnits: 200
             GlobalSecondaryIndexes:
                 - IndexName: followee-follower-index
                   KeySchema:
@@ -636,7 +636,7 @@ Resources:
                         KeyType: RANGE
                   ProvisionedThroughput:
                       ReadCapacityUnits: 5
-                      WriteCapacityUnits: 5
+                      WriteCapacityUnits: 200
                   Projection:
                       ProjectionType: ALL
 
@@ -654,7 +654,7 @@ Resources:
             BillingMode: PROVISIONED
             ProvisionedThroughput:
                 ReadCapacityUnits: 5
-                WriteCapacityUnits: 5
+                WriteCapacityUnits: 200
 
     # Status posts table
     statusesTable:

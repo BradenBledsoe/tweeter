@@ -82,6 +82,8 @@ export class DynamoUserDAO implements UserDAO {
                 lastName: user.lastName,
                 imageUrl: user.imageUrl,
                 hashedPassword: hashedPassword,
+                followee_count: 0,
+                follower_count: 0,
             },
         };
         try {

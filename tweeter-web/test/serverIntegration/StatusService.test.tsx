@@ -1,51 +1,66 @@
-import "isomorphic-fetch";
 import { StatusService } from "../../src/model.service/StatusService";
-import { AuthToken, Status, User } from "tweeter-shared";
+import { ServerFacade } from "../../src/network/ServerFacade";
+import { User, AuthToken, Status } from "tweeter-shared";
+import "isomorphic-fetch";
 
 describe("StatusService Integration Tests", () => {
-    let statusService: StatusService;
+    let service: StatusService;
     let authToken: AuthToken;
+    let user: User;
 
-    beforeAll(() => {
-        statusService = new StatusService();
-        authToken = new AuthToken("test-token-" + Date.now(), Date.now());
+    beforeAll(async () => {
+        const server = new ServerFacade();
+
+        // Create a unique alias so each run registers a new user
+        const alias = `@jestUser${Date.now()}`;
+
+        // Register the user
+        const [registeredUser, tokenString] = await server.register(
+            "Test",
+            "User",
+            alias,
+            "password123",
+            "", // no image string
+            "jpg" // extension placeholder
+        );
+
+        user = registeredUser;
+        // Construct a real AuthToken instance from the token string
+        authToken = new AuthToken(tokenString, Date.now());
+
+        service = new StatusService();
     });
 
-    describe("LoadMoreStoryItems", () => {
-        it("should successfully load user's story items", async () => {
-            const userAlias = "@allen";
-            const pageSize = 10;
-            const lastItem = null;
+    test("loadMoreStoryItems - should retrieve a page of story items successfully", async () => {
+        const [statuses, hasMore] = await service.loadMoreStoryItems(
+            authToken,
+            user.alias,
+            5,
+            null
+        );
 
-            const [storyItems, hasMore] =
-                await statusService.loadMoreStoryItems(
-                    authToken,
-                    userAlias,
-                    pageSize,
-                    lastItem
-                );
+        expect(Array.isArray(statuses)).toBe(true);
+        expect(typeof hasMore).toBe("boolean");
+    });
 
-            expect(storyItems).toBeDefined();
-            expect(Array.isArray(storyItems)).toBe(true);
-            expect(storyItems.length).toBeGreaterThan(0);
-            expect(storyItems.length).toBeLessThanOrEqual(pageSize);
+    test("postStatus - should append a new status to the user's story", async () => {
+        const newStatus = new Status("Hello from Jest!", user, Date.now());
 
-            storyItems.forEach((status) => {
-                expect(status).toBeInstanceOf(Status);
-                expect(status.post).toBeDefined();
-                expect(typeof status.post).toBe("string");
-                expect(status.user).toBeDefined();
-                expect(status.user).toBeInstanceOf(User);
-                expect(status.timestamp).toBeDefined();
-                expect(typeof status.timestamp).toBe("number");
+        await service.postStatus(authToken, newStatus);
 
-                expect(status.user.firstName).toBeDefined();
-                expect(status.user.lastName).toBeDefined();
-                expect(status.user.alias).toBeDefined();
-                expect(status.user.imageUrl).toBeDefined();
-            });
+        const [storyItems] = await service.loadMoreStoryItems(
+            authToken,
+            user.alias,
+            10,
+            null
+        );
 
-            expect(typeof hasMore).toBe("boolean");
-        }, 10000);
+        const found = storyItems.some(
+            (status) =>
+                status.post === newStatus.post &&
+                status.user.alias === user.alias
+        );
+
+        expect(found).toBe(true);
     });
 });
