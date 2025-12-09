@@ -72,7 +72,7 @@ const AuthenticatedRoutes = () => {
                     path="feed/:displayedUser"
                     element={
                         <ItemScroller
-                            key={`story-${displayedUser!.alias}`}
+                            key={`feed-${displayedUser!.alias}`}
                             featureURL="/feed"
                             presenterFactory={(view: PagedItemView<Status>) =>
                                 new FeedPresenter(view)
