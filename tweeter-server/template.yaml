@@ -274,7 +274,7 @@ Resources:
                                 type: aws
                                 httpMethod: POST
                                 uri:
-                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${loadMoreFeedItemsFunction.Arn}/invocations
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getFeedItemsFunction.Arn}/invocations
                                 requestTemplates: *commonRequestTemplates
                                 responses: *commonAmazonResponses
                             responses: *commonSwaggerResponses
@@ -289,7 +289,7 @@ Resources:
                                 type: aws
                                 httpMethod: POST
                                 uri:
-                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${loadMoreStoryItemsFunction.Arn}/invocations
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getStoryItemsFunction.Arn}/invocations
                                 requestTemplates: *commonRequestTemplates
                                 responses: *commonAmazonResponses
                             responses: *commonSwaggerResponses
@@ -343,7 +343,7 @@ Resources:
         Properties:
             LayerName: tweeterLayer
             Description: dependencies layer for Tweeter server
-            ContentUri: ./layer/
+            ContentUri: ./src/layer/
             CompatibleRuntimes:
                 - nodejs20.x
             RetentionPolicy: DELETE
@@ -373,7 +373,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterGetFollowees
-            Handler: /follow/GetFolloweesLambda.handler
+            Handler: /layer/follow/GetFolloweesLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -387,7 +387,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterGetFollowers
-            Handler: /follow/GetFollowersLambda.handler
+            Handler: /layer/follow/GetFollowersLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -401,7 +401,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterGetIsFollowerStatus
-            Handler: /follow/GetIsFollowerLambda.handler
+            Handler: /layer/follow/GetIsFollowerLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -415,7 +415,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterFollow
-            Handler: /follow/FollowLambda.handler
+            Handler: /layer/follow/FollowLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -429,7 +429,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterUnfollow
-            Handler: /follow/UnfollowLambda.handler
+            Handler: /layer/follow/UnfollowLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -443,7 +443,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterGetFolloweeCount
-            Handler: /follow/GetFolloweesCountLambda.handler
+            Handler: /layer/follow/GetFolloweesCountLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -457,7 +457,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterGetFollowerCount
-            Handler: /follow/GetFollowersCountLambda.handler
+            Handler: /layer/follow/GetFollowersCountLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -471,7 +471,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterLogin
-            Handler: /user/LoginLambda.handler
+            Handler: /layer/user/LoginLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -485,7 +485,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterGetUser
-            Handler: /user/GetUserLambda.handler
+            Handler: /layer/user/GetUserLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -499,7 +499,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterRegister
-            Handler: /user/RegisterLambda.handler
+            Handler: /layer/user/RegisterLambda.handler
             Policies: *commonPolicies
             Environment:
                 Variables:
@@ -516,7 +516,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterLogout
-            Handler: /user/LogoutLambda.handler
+            Handler: /layer/user/LogoutLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -530,7 +530,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterLoadMoreFeedItems
-            Handler: /status/GetFeedItemsLambda.handler
+            Handler: /layer/status/GetFeedItemsLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -544,7 +544,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterLoadMoreStoryItems
-            Handler: /status/GetStoryItemsLambda.handler
+            Handler: /layer/status/GetStoryItemsLambda.handler
             Policies: *commonPolicies
             Events:
                 PostApi:
@@ -558,7 +558,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterPostStatus
-            Handler: /status/PostStatusLambda.handler
+            Handler: /layer/status/PostStatusLambda.handler
             Policies: *commonPolicies
             Environment:
                 Variables:
@@ -576,7 +576,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterPostUpdateFeedMessages
-            Handler: /status/PostUpdateFeedMessagesLambda.handler
+            Handler: /layer/status/PostUpdateFeedMessagesLambda.handler
             Policies: *commonPolicies
             Environment:
                 Variables:
@@ -594,7 +594,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: tweeterUpdateFeeds
-            Handler: /status/UpdateFeedsLambda.handler
+            Handler: /layer/status/UpdateFeedsLambda.handler
             Policies: *commonPolicies
             Timeout: 5
             Events:
