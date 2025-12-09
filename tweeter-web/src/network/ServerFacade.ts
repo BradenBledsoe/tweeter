@@ -4,7 +4,6 @@ import {
     User,
     UserDto,
     Status,
-    StatusDto,
     GetUserRequest,
     GetUserResponse,
     LogoutRequest,
